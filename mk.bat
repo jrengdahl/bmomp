@@ -1,12 +1,12 @@
 arm-cortexm7-eabi-gcc ^
 -march=armv7-m ^
--mthumb ^
 -ffixed-r9 ^
 -msoft-float ^
 -mgeneral-regs-only ^
 -mabi=aapcs-linux ^
 -Os ^
 -g ^
+ ^
 -nostdinc ^
 -isystem c:/cross/arm-cortexm7-eabi/lib/gcc/arm-cortexm7-eabi/11.2.0/include ^
 -I ../u-boot/include ^
@@ -20,9 +20,22 @@ arm-cortexm7-eabi-gcc ^
 -D__LINUX_ARM_ARCH__=7 ^
 -DKBUILD_BASENAME='"hello"' ^
 -DKBUILD_MODNAME='"hello"' ^
+ ^
 -Wall ^
 -Wstrict-prototypes ^
 -Wno-format-security ^
+-Wno-pointer-sign ^
+-Wno-stringop-truncation ^
+-Wno-zero-length-bounds ^
+-Wno-array-bounds ^
+-Wno-stringop-overflow ^
+-Wno-maybe-uninitialized ^
+-Wno-format-nonliteral ^
+-Wno-address-of-packed-member ^
+-Wno-unused-but-set-variable ^
+-Werror=date-time ^
+-Wno-packed-not-aligned ^
+ ^
 -fno-builtin ^
 -ffreestanding ^
 -std=gnu11 ^
@@ -31,19 +44,8 @@ arm-cortexm7-eabi-gcc ^
 -fno-PIE ^
 -fno-stack-protector ^
 -fno-delete-null-pointer-checks ^
--Wno-pointer-sign ^
--Wno-stringop-truncation ^
--Wno-zero-length-bounds ^
--Wno-array-bounds ^
--Wno-stringop-overflow ^
--Wno-maybe-uninitialized ^
 -fmacro-prefix-map=./= ^
 -fstack-usage ^
--Wno-format-nonliteral ^
--Wno-address-of-packed-member ^
--Wno-unused-but-set-variable ^
--Werror=date-time ^
--Wno-packed-not-aligned ^
 -fno-inline ^
 -fno-toplevel-reorder ^
 -mword-relocations ^
@@ -52,6 +54,7 @@ arm-cortexm7-eabi-gcc ^
 -ffunction-sections ^
 -fdata-sections ^
 -fno-common ^
+ ^
 -c ^
 hello.c
 

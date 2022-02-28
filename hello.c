@@ -5,7 +5,6 @@ int hello(int argc, char *const argv[])
     {
     int i;
 
-    /* Print the ABI version */
     app_startup(argv);
 
     if(XF_VERSION != get_version())
@@ -23,12 +22,5 @@ int hello(int argc, char *const argv[])
         printf ("argv[%d] = \"%s\"\n", i, argv[i]);
         }
 
-    printf ("Hit any key to exit ... ");
-    while (!tstc());
-
-    /* consume input */
-    (void) getc();
-
-    printf ("\n\n");
     return (0);
     }

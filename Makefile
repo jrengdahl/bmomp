@@ -2,8 +2,6 @@ CROSS=arm-cortexm7-eabi-
 
 OPT += -march=armv7-m
 OPT += -ffixed-r9
-OPT += -msoft-float
-OPT += -mgeneral-regs-only
 OPT += -mabi=aapcs-linux
 OPT += -Os
 OPT += -g
@@ -20,38 +18,21 @@ DEFINE += -D__KERNEL__
 DEFINE += -D__UBOOT__
 DEFINE += -D__ARM__
 DEFINE += -D__LINUX_ARM_ARCH__=7
-DEFINE += -DKBUILD_BASENAME='"hello"'
-DEFINE += -DKBUILD_MODNAME='"hello"'
  
 WARN += -Wall
 WARN += -Wstrict-prototypes
-WARN += -Wno-format-security
-WARN += -Wno-pointer-sign
-WARN += -Wno-stringop-truncation
-WARN += -Wno-zero-length-bounds
-WARN += -Wno-array-bounds
-WARN += -Wno-stringop-overflow
-WARN += -Wno-maybe-uninitialized
-WARN += -Wno-format-nonliteral
-WARN += -Wno-address-of-packed-member
-WARN += -Wno-unused-but-set-variable
-WARN += -Werror=date-time
-WARN += -Wno-packed-not-aligned
 
 OPT += -fno-builtin
 OPT += -ffreestanding
 OPT += -std=gnu11
 OPT += -fshort-wchar
 OPT += -fno-strict-aliasing
-OPT += -fno-PIE
 OPT += -fno-stack-protector
 OPT += -fno-delete-null-pointer-checks
 OPT += -fmacro-prefix-map=./=
 OPT += -fstack-usage
 OPT += -fno-inline
 OPT += -fno-toplevel-reorder
-OPT += -mword-relocations
-OPT += -fno-pic
 OPT += -mno-unaligned-access
 OPT += -ffunction-sections
 OPT += -fdata-sections

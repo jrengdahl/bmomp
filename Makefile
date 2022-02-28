@@ -1,6 +1,5 @@
 CROSS=arm-cortexm7-eabi-
 
-
 OPT += -march=armv7-m
 OPT += -ffixed-r9
 OPT += -msoft-float
@@ -9,7 +8,6 @@ OPT += -mabi=aapcs-linux
 OPT += -Os
 OPT += -g
 
-
 INC += -nostdinc
 INC += -isystem c:/cross/arm-cortexm7-eabi/lib/gcc/arm-cortexm7-eabi/11.2.0/include
 INC += -I ../u-boot/include
@@ -17,7 +15,6 @@ INC += -I ../u-boot/arch/arm/thumb1/include
 INC += -I ../u-boot/arch/arm/include
 INC += -include ../u-boot/include/linux/kconfig.h
 INC += -I ../u-boot/arch/arm/mach-stm32/include
-
 
 DEFINE += -D__KERNEL__
 DEFINE += -D__UBOOT__
@@ -77,22 +74,22 @@ SECT += -j .dtb.init.rodata
 
 all: hello.bin
 
-hello.o: hello.c
-	@echo [CC] hello.c
-	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c hello.c
+%.o: %.c
+	@echo [CC]  $<
+	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
 
 stubs.o: ../u-boot/examples/standalone/stubs.c
-	@echo [CC] stubs.c
-	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c ../u-boot/examples/standalone/stubs.c
+	@echo [CC]  $<
+	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
 
 
 hello.axf : hello.o stubs.o
 	@echo [LD] hello.axf
-	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello.axf -e hello hello.o stubs.o ../u-boot/arch/arm/lib/lib.a
+	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello.axf -e hello $^ ../u-boot/arch/arm/lib/lib.a
 
-hello.bin : hello.axf
-	@echo [OBJCOPY] hello.bin
-	@$(CROSS)objcopy $(SECT) -O binary hello.axf hello.bin
+%.bin : %.axf
+	@echo [OBJCOPY] $<
+	@$(CROSS)objcopy $(SECT) -O binary $< $@
 
 
 clean:

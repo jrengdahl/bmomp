@@ -3,6 +3,7 @@ CROSS=arm-cortexm7-eabi-
 OPT += -march=armv7-m
 OPT += -ffixed-r9
 OPT += -mabi=aapcs-linux
+OPT += -fopenmp
 OPT += -Os
 OPT += -g
 
@@ -55,6 +56,10 @@ SECT += -j .dtb.init.rodata
 
 all: hello.bin
 
+%.o: %.cpp
+	@echo [C+]  $<
+	@$(CROSS)g++ $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
+
 %.o: %.c
 	@echo [CC]  $<
 	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
@@ -64,7 +69,7 @@ stubs.o: ../u-boot/examples/standalone/stubs.c
 	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
 
 
-hello.axf : hello.o stubs.o
+hello.axf : hello.o stubs.o libgomp.o
 	@echo [LD] hello.axf
 	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello.axf -e hello $^ ../u-boot/arch/arm/lib/lib.a
 

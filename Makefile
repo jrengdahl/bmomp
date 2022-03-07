@@ -69,7 +69,7 @@ stubs.o: ../u-boot/examples/standalone/stubs.c
 	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
 
 
-hello.axf : hello.o stubs.o libgomp.o
+hello.axf : hello.o stubs.o
 	@echo [LD] hello.axf
 	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello.axf -e hello $^ ../u-boot/arch/arm/lib/lib.a
 

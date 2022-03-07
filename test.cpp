@@ -1,14 +1,29 @@
-#include "thread.h"
+#include <common.h>
+#include <exports.h>
+#include <omp.h>
 
+Thread x;
 
-extern "C"
-void test0(place &x)
+char stack[128] __attribute__((__aligned(8)));
+
+void thread()
     {
-    x.resume();
+    printf("thread: started\n");
+    x.suspend();
+    printf("thread: resumed, exiting\n");
     }
 
+
 extern "C"
-void test1(place &x)
+int hello(int argc, char *const argv[])
     {
-    x.suspend();
+    app_startup(argv);
+
+    printf("hello, world!\n");
+    start(thread, stack);
+    printf("main: thread started %d\n");
+    x.resume();
+    printf("main: done\n");
+
+    return (0);
     }

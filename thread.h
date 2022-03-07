@@ -18,11 +18,12 @@ class Thread
     uint32_t sp;
     uint32_t lr;
 
+    static void start(THREADFN *fn, char *sp);
+
     public:
 
     void resume();
     void suspend();
-    static void start(THREADFN *fn, char *sp);
 
     template<unsigned N>
     static void spawn(THREADFN *fn,         // code

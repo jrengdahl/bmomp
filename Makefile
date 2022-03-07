@@ -7,7 +7,8 @@ OPT += -fopenmp
 OPT += -Os
 OPT += -g
 
-INC += -nostdinc
+COPT += -nostdinc
+INC += -I .
 INC += -isystem c:/cross/arm-cortexm7-eabi/lib/gcc/arm-cortexm7-eabi/11.2.0/include
 INC += -I ../u-boot/include
 INC += -I ../u-boot/arch/arm/thumb1/include
@@ -20,24 +21,27 @@ DEFINE += -D__UBOOT__
 DEFINE += -D__ARM__
 DEFINE += -D__LINUX_ARM_ARCH__=7
  
-WARN += -Wall
-WARN += -Wstrict-prototypes
 
-OPT += -fno-builtin
-OPT += -ffreestanding
-OPT += -std=gnu11
-OPT += -fshort-wchar
-OPT += -fno-strict-aliasing
-OPT += -fno-stack-protector
-OPT += -fno-delete-null-pointer-checks
-OPT += -fmacro-prefix-map=./=
-OPT += -fstack-usage
-OPT += -fno-inline
-OPT += -fno-toplevel-reorder
-OPT += -mno-unaligned-access
-OPT += -ffunction-sections
-OPT += -fdata-sections
-OPT += -fno-common
+OPT     += -ffreestanding
+COPT    += -std=gnu11
+CPPOPT  += -std=gnu++17
+OPT     += -fshort-wchar
+CPPOPT  += -fno-strict-aliasing
+OPT     += -fno-stack-protector
+OPT     += -fno-delete-null-pointer-checks
+OPT     += -fmacro-prefix-map=./=
+OPT     += -fstack-usage
+COPT    += -fno-inline
+OPT     += -fno-toplevel-reorder
+COPT    += -mno-unaligned-access
+OPT     += -ffunction-sections
+OPT     += -fdata-sections
+OPT     += -fno-common
+CPPOPT  += -fno-exceptions
+OPT     += -fno-optimize-sibling-calls
+
+OPT += -Wall
+COPT += -Wstrict-prototypes
 
 SECT += -j .text
 SECT += -j .secure_text
@@ -54,15 +58,15 @@ SECT += -j .text_rest
 SECT += -j .dtb.init.rodata
 
 
-all: hello.bin
+all: hello.bin hello_cpp.bin test.bin
 
 %.o: %.cpp
 	@echo [C+]  $<
-	@$(CROSS)g++ $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
+	@$(CROSS)g++ $(OPT) $(CPPOPT) $(INC) $(DEFINE) $(WARN) -c $<
 
 %.o: %.c
 	@echo [CC]  $<
-	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
+	@$(CROSS)gcc $(OPT) $(COPT) $(INC) $(DEFINE) $(WARN) -c $<
 
 stubs.o: ../u-boot/examples/standalone/stubs.c
 	@echo [CC]  $<
@@ -71,7 +75,15 @@ stubs.o: ../u-boot/examples/standalone/stubs.c
 
 hello.axf : hello.o stubs.o
 	@echo [LD] hello.axf
-	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello.axf -e hello $^ ../u-boot/arch/arm/lib/lib.a
+	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello.axf -e hello $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
+
+hello_cpp.axf : hello_cpp.o stubs.o
+	@echo [LD] hello_cpp.axf
+	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o hello_cpp.axf -e hello $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
+
+test.axf : test.o thread.o stubs.o
+	@echo [LD] test.axf
+	@$(CROSS)ld.bfd -T lscript.ld -g -o test.axf -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 
 %.bin : %.axf
 	@echo [OBJCOPY] $<

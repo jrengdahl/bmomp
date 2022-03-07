@@ -1,10 +1,28 @@
-#include <common.h>
-#include <exports.h>
-#include <omp.h>
+#include <stdint.h>
+
+#include "exports.hpp"
+#include "thread.h"
 
 Thread x;
 
-char stack[128] __attribute__((__aligned(8)));
+char stack[128] __attribute__((aligned(8)));
+
+void thread();
+
+extern "C"
+int start(int argc, char *const argv[])
+    {
+    app_startup(argv);
+
+    printf("hello, world!\n");
+    Thread::spawn(thread, stack);
+    printf("main: thread started\n");
+    x.resume();
+    printf("main: done\n");
+
+    return (0);
+    }
+
 
 void thread()
     {
@@ -14,16 +32,3 @@ void thread()
     }
 
 
-extern "C"
-int hello(int argc, char *const argv[])
-    {
-    app_startup(argv);
-
-    printf("hello, world!\n");
-    start(thread, stack);
-    printf("main: thread started %d\n");
-    x.resume();
-    printf("main: done\n");
-
-    return (0);
-    }

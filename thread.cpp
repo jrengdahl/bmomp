@@ -6,7 +6,7 @@ const unsigned THREAD_DEPTH = 32;
 
 static Thread thread_stack[THREAD_DEPTH];
 
-static Thread *thread_stack_pointer __attribute__((__unused__)) = &thread_stack[THREAD_DEPTH];
+Thread *thread_stack_pointer = &thread_stack[THREAD_DEPTH];
 
 
 void Thread::resume()

@@ -1,3 +1,13 @@
+// threadFIFO
+//
+// A threadFIFO is a subclass of FIFO. The data type stored in the FIFO are Threads.
+// The inherited member functions are not much use.
+// The subclass member functions, suspend and resume, enable multiple threads to suspend at
+// a threadFIFO. When a threadFIFO is resumed the oldest suspended thread is resumed.
+// One notable use of a threadFIFO is the DeferFIFO, which is used to support yield and
+// timesharing among multiple threads.
+
+
 #ifndef THREADFIFO_HPP
 #define THREADFIFO_HPP
 
@@ -71,6 +81,26 @@ class threadFIFO : public FIFO<Thread, N>
         this->nextOut = newNextOut;                                                 // save new index
         }
     };
+
+
+extern threadFIFO<16> DeferFIFO;
+
+
+// suspend the current thread at the DeferFIFO.
+// It will be resumed later by the background thread.
+
+static inline void yield()
+    {
+    DeferFIFO.suspend();
+    }
+
+
+// Called by the backgroud thread to resume any supended threads in the DeferFIFO.
+
+static inline void undefer()
+    {
+    DeferFIFO.resume();
+    }
 
 
 #endif // THREADFIFO_HPP

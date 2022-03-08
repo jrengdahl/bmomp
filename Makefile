@@ -2,6 +2,7 @@ CROSS=arm-cortexm7-eabi-
 
 OPT += -march=armv7-m
 OPT += -ffixed-r9
+OPT += -ffixed-r11
 OPT += -mabi=aapcs-linux
 OPT += -fopenmp
 OPT += -Os

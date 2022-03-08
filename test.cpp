@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include "exports.hpp"
-#include "thread.h"
+#include "thread.hpp"
 
 Thread x;
 
@@ -13,12 +13,14 @@ extern "C"
 int start(int argc, char *const argv[])
     {
     app_startup(argv);
+    Thread::init();
 
     printf("hello, world!\n");
     Thread::spawn(thread, stack);
-    printf("main: thread started\n");
+    printf("main: thread done = %u\n", Thread::done(stack));
     x.resume();
-    printf("main: done\n");
+    printf("main: thread done = %u\n", Thread::done(stack));
+    printf("main: test complete\n");
 
     return (0);
     }

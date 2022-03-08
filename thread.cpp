@@ -10,7 +10,6 @@ static Thread thread_stack[THREAD_DEPTH];
 void Thread::resume()
     {
     __asm__ __volatile__(
-
 "   mov ip, sp                                      \n"
 "   stmdb r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
 "   ldmia r0,   {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
@@ -21,7 +20,6 @@ void Thread::resume()
 void Thread::suspend()
     {
     __asm__ __volatile__(
-
 "   mov ip, sp                                      \n"
 "   stmia r0,   {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
 "   ldmia r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
@@ -33,7 +31,6 @@ void Thread::suspend()
 void Thread::start(THREADFN *fn, char *newsp)
     {
     __asm__ __volatile__(
-
 "   mov ip, sp                                      \n"
 "   stmdb r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
 

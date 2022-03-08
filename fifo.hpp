@@ -20,7 +20,7 @@
 template<typename T, unsigned N>
 class FIFO
     {
-    private:
+    protected:
 
     unsigned nextIn = 0;        // Index of next entry to be written, align to double-word boundary so ldp can be used by optimizer
     unsigned nextOut = 0;       // Index of next entry to be read.

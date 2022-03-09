@@ -39,6 +39,7 @@ class Thread
     static void init();
 
     template<unsigned N>
+    __attribute__((__noinline__))
     static bool done(char (&stack)[N])
         {
         return stack[N-4] == 1;

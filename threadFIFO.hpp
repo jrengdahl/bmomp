@@ -14,6 +14,8 @@
 #include "thread.hpp"
 #include "FIFO.hpp"
 
+static const unsigned DEFER_FIFO_DEPTH = 16;
+
 template<unsigned N>
 class threadFIFO : public FIFO<Thread, N>
     {
@@ -22,11 +24,11 @@ class threadFIFO : public FIFO<Thread, N>
     __attribute__((__noinline__))
     void suspend()
         {
-        uint32_t cNextIn;                                                           // copy of nextIn
+        uint32_t curNextIn;                                                         // copy of nextIn
         uint32_t newNextIn;                                                         // updated index
 
-        cNextIn = this->nextIn;                                                     // get the index of the slot next to be written
-        newNextIn = cNextIn + 1;                                                    // calc index of next slot
+        curNextIn = this->nextIn;                                                   // get the index of the slot next to be written
+        newNextIn = curNextIn + 1;                                                  // calc index of next slot
         if(newNextIn > N)
             {
             newNextIn = 0;
@@ -39,11 +41,11 @@ class threadFIFO : public FIFO<Thread, N>
         __asm__ __volatile__(
 
     "   mov ip, sp                                      \n"
-    "   stmia %[th], {r4, r5, r6, r7, r8, r9, ip, lr}   \n"
-    "   ldmia r11!,  {r4, r5, r6, r7, r8, r9, ip, lr}   \n"
+    "   stmia %[th], {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
+    "   ldmia r11!,  {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
     "   mov sp, ip                                      \n"
         :
-        : [th]"r"(&(this->Data)[cNextIn])
+        : [th]"r"(&(this->Data)[curNextIn])
         :
         );
 
@@ -54,11 +56,11 @@ class threadFIFO : public FIFO<Thread, N>
     __attribute__((__noinline__))
     void resume()
         {
-        uint32_t cNextOut;                                                          // copy of nextIn
+        uint32_t curNextOut;                                                        // copy of nextIn
         uint32_t newNextOut;                                                        // updated index
 
-        cNextOut = this->nextOut;                                                   // get the current output index
-        if(cNextOut == this->nextIn)                                                // if FIFO is empty
+        curNextOut = this->nextOut;                                                 // get the current output index
+        if(curNextOut == this->nextIn)                                              // if FIFO is empty
             {
             return;                                                                 // return, FIFO is empty, nothing to resume
             }
@@ -69,11 +71,11 @@ class threadFIFO : public FIFO<Thread, N>
     "   ldmia %[th], {r4, r5, r6, r7, r8, r10, ip, lr}  \n"
     "   mov sp, ip                                      \n"
         :
-        : [th]"r"(&(this->Data)[cNextOut])
+        : [th]"r"(&(this->Data)[curNextOut])
         :
         );
 
-        newNextOut = cNextOut + 1;                                                  // calc index of next slot
+        newNextOut = curNextOut + 1;                                                // calc index of next slot
         if(newNextOut > N)
             {
             newNextOut = 0;
@@ -83,7 +85,7 @@ class threadFIFO : public FIFO<Thread, N>
     };
 
 
-extern threadFIFO<16> DeferFIFO;
+extern threadFIFO<DEFER_FIFO_DEPTH> DeferFIFO;
 
 
 // suspend the current thread at the DeferFIFO.

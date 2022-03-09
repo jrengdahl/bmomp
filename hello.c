@@ -1,5 +1,4 @@
-#include <common.h>
-#include <exports.h>
+#include <exports.hpp>
 
 int hello(int argc, char *const argv[])
     {

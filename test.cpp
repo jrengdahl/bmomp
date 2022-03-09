@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include "exports.hpp"
 #include "thread.hpp"
@@ -6,7 +7,7 @@
 
 Thread x;
 
-char stack[128] __attribute__((aligned(8)));
+char stack[1024] __attribute__((aligned(8)));
 
 threadFIFO<16> DeferFIFO;
 
@@ -19,13 +20,16 @@ int start(int argc, char *const argv[])
     Thread::init();
 
     printf("hello, world!\n");
+    printf("main: spawning thread\n");
     Thread::spawn(thread, stack);
-    printf("main: thread done = %u\n", Thread::done(stack));
+    printf("main: back from spawn, done flag = %u\n", Thread::done(stack));
+    printf("main: trying resume next\n");
     x.resume();
-    printf("main: returned from resume, trying undefer next\n");
+    printf("main: back from resume, trying undefer next (twice)\n");
     undefer();
+    printf("main: back from first undefer, done flag = %u\n", Thread::done(stack));
     undefer();
-    printf("main: thread done = %u\n", Thread::done(stack));
+    printf("main: back from second undefer, done flag = %u\n", Thread::done(stack));
     printf("main: test complete\n");
 
     return (0);
@@ -34,11 +38,11 @@ int start(int argc, char *const argv[])
 
 void thread()
     {
-    printf("thread: started\n");
+    printf("thread: started, trying suspend next\n");
     x.suspend();
-    printf("thread: resumed\n");
+    printf("thread: back from suspend, trying yield next\n");
     yield();
-    printf("thread: returned from yield, exiting\n");
+    printf("thread: back from yield, exiting\n");
     }
 
 

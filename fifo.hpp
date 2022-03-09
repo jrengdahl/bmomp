@@ -11,10 +11,10 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// @class Fifo
+/// class Fifo
 ///
-/// @param T      - Type of data this FIFO will hold.
-/// @param N      - Number of entries this FIFO will hold.
+/// template parameter T      - Type of data this FIFO will hold.
+/// template parameter N      - Number of entries this FIFO will hold.
 ///
 /////////////////////////////////////////////////////////////////////////////
 template<typename T, unsigned N>
@@ -22,10 +22,10 @@ class FIFO
     {
     protected:
 
-    unsigned nextIn = 0;        // Index of next entry to be written, align to double-word boundary so ldp can be used by optimizer
+    unsigned nextIn = 0;        // Index of next entry to be written
     unsigned nextOut = 0;       // Index of next entry to be read.
 
-    T Data[N+1];                // Data store (one more than capacity, since m_nextIn==m_nextOut is empty, but m_nextIn+1==m_nextOut is full).
+    T Data[N+1];                // Data store (one more than capacity, since nextIn==nextOut is empty, but nextIn+1==nextOut is full).
 
 
     public:
@@ -33,7 +33,7 @@ class FIFO
     ///////////////////////////////////////////////////////////////////////////////
     //  FIFO::operator bool
     ///
-    /// @details returns true if FIFO has any contents
+    /// returns true if FIFO has any content
     ///////////////////////////////////////////////////////////////////////////////
 
     inline operator bool() { return nextIn != nextOut; }
@@ -42,43 +42,43 @@ class FIFO
     ///////////////////////////////////////////////////////////////////////////////
     //  FIFO::add
     ///
-    /// @details Adds an entry to the FIFO.
+    /// Adds an entry to the FIFO.
     ///
-    /// @param value  The value to be added. <b>Must not be nil!</b>
+    /// input: value  The value to be added. <b>Must not be nil!</b>
     ///
-    /// @return bool
-    ///     @retval true   The value was added to the FIFO.
-    ///     @retval false  The FIFO is full, the value was not added.
+    /// return bool
+    ///     true   The value was added to the FIFO.
+    ///     false  The FIFO is full, the value was not added.
     ///////////////////////////////////////////////////////////////////////////////
 
     bool add(T value)
         {
-        unsigned cNextIn;                                                           // copy of nextIn
+        unsigned curNextIn;                                                         // copy of nextIn
         unsigned newNextIn;                                                         // updated index
 
-        cNextIn = nextIn;                                                           // get the index of the slot next to be written
-        newNextIn = cNextIn + 1;                                                    // calc index of next slot
+        curNextIn = nextIn;                                                         // get the index of the slot next to be written
+        newNextIn = curNextIn + 1;                                                  // calc index of next slot
         if(newNextIn > N)
             {
             newNextIn = 0;
             }
         if(newNextIn == nextOut)                                                    // if pointers collide it's full, return false
             {
-            return false;
+            return false;                                                           // cannot add because the FIFO is full
             }
 
-        Data[cNextIn] = value;                                                      // store the data to the owned slot
+        Data[curNextIn] = value;                                                    // store the data to the owned slot
 
-        nextIn = newNextIn;                                                         // store new index
+        nextIn = newNextIn;                                                         // save new index
 
         return true;                                                                // return success
         }
 
 
     /////////////////////////////////////////////////////////////////////////////
-    //  FIFO::Take
+    //  FIFO::take
     ///
-    /// @details Takes an entry from the FIFO.
+    /// Takes an entry from the FIFO.
     ///
     /// arg: reference to where to put the value taken
     /// return: true if a value was taken, false if the FIFO was empty
@@ -86,18 +86,18 @@ class FIFO
 
     bool take(T &value)
         {
-        unsigned cNextOut;                                                          // copy of nextIn
+        unsigned curNextOut;                                                        // copy of nextIn
         unsigned newNextOut;                                                        // updated index
 
-        cNextOut = nextOut;                                                         // get the current output index
-        if(cNextOut == nextIn)                                                      // if FIFO is empty
+        curNextOut = nextOut;                                                       // get the current output index
+        if(curNextOut == nextIn)                                                    // if FIFO is empty
             {
             return false;                                                           // return false, the FIFO was empty and no value was returned
             }
 
-        value = Data[cNextOut];                                                     // get the value from the current slot
+        value = Data[curNextOut];                                                   // get the value from the current slot
 
-        newNextOut = cNextOut + 1;                                                  // calc index of next slot
+        newNextOut = curNextOut + 1;                                                // calc index of next slot
         if(newNextOut > N)
             {
             newNextOut = 0;
@@ -110,4 +110,3 @@ class FIFO
 
 
 #endif // FIFO_HPP
-

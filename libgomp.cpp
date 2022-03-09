@@ -1,25 +1,22 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <omp.h>
-#include "libgomp.h"
+#include "thread.hpp"
+#include "threadFIFO.hpp"
+#include "libgomp.hpp"
 
-OS_STACK<GOMP_STACK_SIZE> gomp_stacks[GOMP_NUM_THREADS] ALIGN(GOMP_STACK_SIZE);
+char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__aligned__((GOMP_STACK_SIZE))));
 
-OS_PORT workers[GOMP_NUM_THREADS];
-
-typedef void (*FN)(void *);
+typedef void JOBFN(void *);
 
 struct job
     {
-    FN fn;
+    JOBFN *fn;
     void *data;
     bool done;
+    Thread worker;
     };
 
 job jobs[GOMP_NUM_THREADS];
-
-
-static uint32_t
 
 
 extern "C"
@@ -29,29 +26,29 @@ int omp_get_num_threads()
     }
 
 
-
-IGNORE_FLAGS("-Wvolatile-register-var")                         // ignore warnings about volatile registers
 extern "C"
 int omp_get_thread_num()
     {
-    register volatile uintptr_t r9 __asm__("r9");
+    unsigned sp;
 
-    return (r9>>GOMP_STACK_SHIFT) & ((1<<GOMP_TID_BITS)-1);
+    __asm__ __volatile__("    mov %[sp], sp" : [sp]"=r"(sp));
+
+    return (sp>>GOMP_STACK_SHIFT) & GOMP_TID_MASK;
     }
-END_IGNORE_FLAGS("-Wvolatile-register-var")
 
 
 
-OS_THREAD(gomp_worker, tid)
+void gomp_worker()
     {
-    yield();                                // shift the new thread to the correct core
+    int tid = omp_get_thread_num();
+
     jobs[tid].done = false;
 
     while(true)
         {
-        workers[tid].wait();
+        jobs[tid].worker.suspend();
 
-        FN fn = jobs[tid].fn;
+        JOBFN *fn = jobs[tid].fn;
         void *data = jobs[tid].data;
         (*fn)(data);
         jobs[tid].done = true;
@@ -62,12 +59,12 @@ OS_THREAD(gomp_worker, tid)
 
 extern "C"
 void GOMP_parallel(
-    void (*fn) (void *),                // the thread code
-    void *data,                         // the local data
-    unsigned num_threads,               // the requested number of threads
-    unsigned int flags unused)          // flags (ignored for now)
+    JOBFN *fn,                                      // the thread code
+    void *data,                                     // the local data
+    unsigned num_threads,                           // the requested number of threads
+    unsigned flags __attribute__((__unused__)))     // flags (ignored for now)
     {
-    if(num_threads > GOMP_NUM_THREADS)
+    if(num_threads == 0 || num_threads > GOMP_NUM_THREADS)
         {
         num_threads = GOMP_NUM_THREADS;
         }
@@ -78,12 +75,12 @@ void GOMP_parallel(
         jobs[i].fn = fn;
         jobs[i].data = data;
         jobs[i].done = false;
-        workers[i].wake();        
+        jobs[i].worker.resume();
         }
     
-    for(int i=0; i<num_threads; i++)
+    for(unsigned i=0; i<num_threads; i++)
         {
-        while(jobs[i].done == false
+        while(jobs[i].done == false)
             {
             yield();
             }
@@ -91,14 +88,11 @@ void GOMP_parallel(
     }
 
 
-void gomp_init()
+void libgomp_init()
     {
-    char name[16];
-
-    for(int i=0; i<num_threads; i++)
+    for(int i=0; i<GOMP_NUM_THREADS; i++)
         {
-        snprintf(name, sizeof(name), "gomp%d", i);
-        gomp_stacks[i].spawn(name, gomp_worker, i);
+        Thread::spawn(gomp_worker, gomp_stacks[i]);         
         }
     }
 

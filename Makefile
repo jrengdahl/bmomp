@@ -8,14 +8,15 @@ OPT += -fopenmp
 OPT += -Os
 OPT += -g
 
-COPT += -nostdinc
 INC += -I .
-INC += -isystem c:/cross/arm-cortexm7-eabi/lib/gcc/arm-cortexm7-eabi/11.2.0/include
-INC += -I ../u-boot/include
-INC += -I ../u-boot/arch/arm/thumb1/include
-INC += -I ../u-boot/arch/arm/include
-INC += -include ../u-boot/include/linux/kconfig.h
-INC += -I ../u-boot/arch/arm/mach-stm32/include
+
+UINC += -nostdinc
+UINC += -isystem c:/cross/arm-cortexm7-eabi/lib/gcc/arm-cortexm7-eabi/11.2.0/include
+UINC += -I ../u-boot/include
+UINC += -I ../u-boot/arch/arm/thumb1/include
+UINC += -I ../u-boot/arch/arm/include
+UINC += -include ../u-boot/include/linux/kconfig.h
+UINC += -I ../u-boot/arch/arm/mach-stm32/include
 
 DEFINE += -D__KERNEL__
 DEFINE += -D__UBOOT__
@@ -59,7 +60,7 @@ SECT += -j .text_rest
 SECT += -j .dtb.init.rodata
 
 
-all: hello.bin hello_cpp.bin test.bin
+all: hello.bin hello_cpp.bin test.bin omp1.bin
 
 %.o: %.cpp
 	@echo [C+]  $<
@@ -71,7 +72,7 @@ all: hello.bin hello_cpp.bin test.bin
 
 stubs.o: ../u-boot/examples/standalone/stubs.c
 	@echo [CC]  $<
-	@$(CROSS)gcc $(OPT) $(INC) $(DEFINE) $(WARN) -c $<
+	@$(CROSS)gcc $(OPT) $(INC) $(UINC) $(DEFINE) $(WARN) -c $<
 
 
 hello.axf : hello.o stubs.o
@@ -85,6 +86,10 @@ hello_cpp.axf : hello_cpp.o stubs.o
 test.axf : test.o thread.o stubs.o
 	@echo [LD] test.axf
 	@$(CROSS)ld.bfd -T lscript.ld -g -o test.axf -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
+
+omp1.axf : omp1.o thread.o libgomp.o stubs.o
+	@echo [LD] omp1.axf
+	@$(CROSS)ld.bfd -T lscript.ld -g -o omp1.axf -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 
 %.bin : %.axf
 	@echo [OBJCOPY] $<

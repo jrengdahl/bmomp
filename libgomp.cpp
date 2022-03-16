@@ -13,7 +13,7 @@
 
 // The worker thread's stacks
 // The thread number can be determined by  looking at certain bits of the sp.
-static char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE];
+static char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__aligned__((8))));
 
 // a thread that waits for a job from OMP
 typedef void JOBFN(void *);
@@ -28,7 +28,7 @@ struct job
     };
 
 // an array of jobs
-static job jobs[GOMP_NUM_THREADS] __attribute__((__aligned__((8))));
+static job jobs[GOMP_NUM_THREADS];
 
 
 
@@ -44,7 +44,7 @@ extern "C"
 int omp_get_thread_num()
     {
     uintptr_t sp;
-    uintptr_t base = (uintptr_t)&gomp_stacks
+    uintptr_t base = (uintptr_t)&gomp_stacks;
 
     __asm__ __volatile__("    mov %[sp], sp" : [sp]"=r"(sp));
 

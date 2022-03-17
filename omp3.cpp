@@ -52,25 +52,34 @@ int start(int argc, char *const argv[])
     }
 
 
-#define LIMIT 64
+#define LIMIT 32
+
+unsigned A[LIMIT];
+unsigned B[LIMIT];
+unsigned sum = 0;
 
 void test()
     {
-    unsigned array[LIMIT];
 
     printf("hello, world!\n");
 
-    #pragma omp parallel for num_threads(LIMIT)
-    for(int i=0; i<LIMIT; i++)
+    #pragma omp parallel
         {
-        array[i] = omp_get_thread_num();
+        int i = omp_get_thread_num();
+        A[i] = i;
+
+        #pragma omp barrier
+        B[i] = A[(i+1)%LIMIT];
+
+        #pragma omp critical
+        sum += B[i];
         }
 
     for(int i=0; i<LIMIT; i++)
         {
-        printf("%u ", array[i]);
+        printf("%u ", B[i]);
         }
-    printf("\n");
+    printf("\nsum = %u \n", sum);
 
     }
 

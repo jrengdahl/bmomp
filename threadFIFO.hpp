@@ -1,7 +1,7 @@
 // threadFIFO
 //
 // A threadFIFO is a subclass of FIFO. The data type stored in the FIFO are Threads.
-// The inherited member functions are not much use.
+// The inherited member functions add and take are not much use.
 // The subclass member functions, suspend and resume, enable multiple threads to suspend at
 // a threadFIFO. When a threadFIFO is resumed the oldest suspended thread is resumed.
 // One notable use of a threadFIFO is the DeferFIFO, which is used to support yield and

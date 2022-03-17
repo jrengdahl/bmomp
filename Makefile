@@ -60,7 +60,7 @@ SECT += -j .text_rest
 SECT += -j .dtb.init.rodata
 
 
-all: hello.bin hello_cpp.bin test.bin omp1.bin omp2.bin omp3.bin
+all: hello.bin hello_cpp.bin test.bin omp1.bin omp2.bin omp3.bin omp4.bin
 
 %.o: %.cpp
 	@echo [C+]  $<
@@ -96,6 +96,10 @@ omp2.axf : omp2.o thread.o libgomp.o stubs.o
 	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 
 omp3.axf : omp3.o thread.o libgomp.o stubs.o
+	@echo [LD] $@
+	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
+
+omp4.axf : omp4.o thread.o libgomp.o stubs.o
 	@echo [LD] $@
 	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 

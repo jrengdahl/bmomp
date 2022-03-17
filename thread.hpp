@@ -16,11 +16,11 @@
 // A thread consists of:
 // -- a subroutine. Multiple threads can be running the same code.
 // -- a context. The context consists of the non-volatile registers (r4-r11, sp, lr, on some systems
-//    excluding fixed registers such as r9). The volatile registers r0-r3 and ip are no members of a
+//    excluding fixed registers such as r9). The volatile registers r0-r3 and ip are not members of a
 //    saved context because this threading system is non-preemptive -- a thread state change is only
 //    initiated by a subroutine call, and volatile registers do not need to be saved across a call.
 //    Furthermore, the pc is saved in lr by a subroutine call, thus the pc is not explicitly saved.
-// -- a stack, pointer to by sp. The Thread functions that receive a stack as an argument are passed a
+// -- a stack, pointed to by sp. The Thread functions that receive a stack as an argument are passed a
 //    reference to an array of char. In this way the templated functions can determine the stack size,
 //    whereas if a pointer were passed the size information would be lost.
 //
@@ -36,8 +36,9 @@
 // confused with the notmal sp) in r11. This removes one more register from the pool allocatable by the
 // compiler, but has the following significant benefit:
 // -- the thread switching code becomes much faster and simpler.
-// -- the compiler requires fewer registers, thus the threadFIFO algorithm can be implemented using
-//    only the five volatile registers. This greatly simplifies the threadFIFO suspend and resume routines.
+// -- the compiler requires fewer registers to implement a context switch, thus the threadFIFO algorithm
+//    can be implemented using only the five volatile registers. This greatly simplifies the threadFIFO
+//    suspend and resume routines.
 // 
 // Excluding the subroutine call and return, a thread switch costs only four instructions. On a 500 MHz
 // CPU this would be 40 nanoseconds. Compare this to 10 microseonds for a thread switch on a preemptive

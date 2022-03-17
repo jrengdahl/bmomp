@@ -11,16 +11,18 @@
 #ifndef THREADFIFO_HPP
 #define THREADFIFO_HPP
 
+#include "Compiler.hpp"
 #include "thread.hpp"
 #include "FIFO.hpp"
 
-static const unsigned DEFER_FIFO_DEPTH = 16;
+static const unsigned DEFER_FIFO_DEPTH = 31;
 
 template<unsigned N>
 class threadFIFO : public FIFO<Thread, N>
     {
     public:
 
+    __attribute__((__optimize__("Os")))
     __attribute__((__noinline__))
     void suspend()
         {
@@ -28,11 +30,7 @@ class threadFIFO : public FIFO<Thread, N>
         uint32_t newNextIn;                                                         // updated index
 
         curNextIn = this->nextIn;                                                   // get the index of the slot next to be written
-        newNextIn = curNextIn + 1;                                                  // calc index of next slot
-        if(newNextIn > N)
-            {
-            newNextIn = 0;
-            }
+        newNextIn = (curNextIn + 1) % (N + 1);                                      // calc index of next slot
         if(newNextIn == this->nextOut)                                              // if pointers collide it's full, return false
             {
             return;                                                                 // FIFO is full, cannot suspend here, TODO this probably should be an assert
@@ -49,15 +47,16 @@ class threadFIFO : public FIFO<Thread, N>
         :
         );
 
+        COMPILE_BARRIER();
         this->nextIn = newNextIn;                                                   // store new index
         }
 
 
+    __attribute__((__optimize__("Os")))
     __attribute__((__noinline__))
     void resume()
         {
         uint32_t curNextOut;                                                        // copy of nextIn
-        uint32_t newNextOut;                                                        // updated index
 
         curNextOut = this->nextOut;                                                 // get the current output index
         if(curNextOut == this->nextIn)                                              // if FIFO is empty
@@ -75,12 +74,8 @@ class threadFIFO : public FIFO<Thread, N>
         :
         );
 
-        newNextOut = curNextOut + 1;                                                // calc index of next slot
-        if(newNextOut > N)
-            {
-            newNextOut = 0;
-            }
-        this->nextOut = newNextOut;                                                 // save new index
+        COMPILE_BARRIER();
+        this->nextOut = (curNextOut + 1) % (N + 1);                                 // calc index of next slot
         }
     };
 

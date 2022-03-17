@@ -9,6 +9,8 @@
 #ifndef FIFO_HPP
 #define FIFO_HPP
 
+#include "Compiler.hpp"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// class Fifo
@@ -57,18 +59,14 @@ class FIFO
         unsigned newNextIn;                                                         // updated index
 
         curNextIn = nextIn;                                                         // get the index of the slot next to be written
-        newNextIn = curNextIn + 1;                                                  // calc index of next slot
-        if(newNextIn > N)
-            {
-            newNextIn = 0;
-            }
+        newNextIn = (curNextIn + 1) % (N + 1);                                      // calc index of next slot
         if(newNextIn == nextOut)                                                    // if pointers collide it's full, return false
             {
             return false;                                                           // cannot add because the FIFO is full
             }
 
         Data[curNextIn] = value;                                                    // store the data to the owned slot
-
+        COMPILE_BARRIER();
         nextIn = newNextIn;                                                         // save new index
 
         return true;                                                                // return success
@@ -87,7 +85,6 @@ class FIFO
     bool take(T &value)
         {
         unsigned curNextOut;                                                        // copy of nextIn
-        unsigned newNextOut;                                                        // updated index
 
         curNextOut = nextOut;                                                       // get the current output index
         if(curNextOut == nextIn)                                                    // if FIFO is empty
@@ -96,13 +93,8 @@ class FIFO
             }
 
         value = Data[curNextOut];                                                   // get the value from the current slot
-
-        newNextOut = curNextOut + 1;                                                // calc index of next slot
-        if(newNextOut > N)
-            {
-            newNextOut = 0;
-            }
-        nextOut = newNextOut;                                                       // save new index
+        COMPILE_BARRIER();
+        nextOut = (curNextOut + 1) % (N + 1);                                       // calc index of next slot
 
         return true;                                                                // return true, a value was returned
         }

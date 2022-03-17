@@ -9,7 +9,7 @@ Thread x;
 
 char stack[1024] __attribute__((aligned(8)));
 
-threadFIFO<16> DeferFIFO;
+threadFIFO<DEFER_FIFO_DEPTH> DeferFIFO;
 
 void thread();
 

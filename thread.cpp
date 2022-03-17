@@ -4,9 +4,8 @@
 #include <stdint.h>
 #include "thread.hpp"
 
-// Define the maximum depth of teh thread stack -- how deep can "resume" calls be nested.
-// I believe 32 is a ridiculously large nesting depth.
-const unsigned THREAD_DEPTH = 32;
+// Define the maximum depth of the thread stack -- how deep can "resume" calls be nested.
+const unsigned THREAD_DEPTH = 40;
 
 // This is the pending thread stack.
 static Thread thread_stack[THREAD_DEPTH];

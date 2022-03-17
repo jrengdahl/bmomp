@@ -176,6 +176,12 @@ void GOMP_critical_start()
     mutex[team] = true;
     }
 
+extern "C"
+void GOMP_atomic_start()
+    {
+    GOMP_critical_start();
+    }
+
 
 extern "C"
 void GOMP_critical_end()
@@ -199,6 +205,11 @@ void GOMP_critical_end()
         }
     }
 
+extern "C"
+void GOMP_atomic_end()
+    {
+    GOMP_critical_end();
+    }
 
 
 

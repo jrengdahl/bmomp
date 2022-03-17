@@ -4,3 +4,4 @@
 *.su
 *.map
 /backup
+/foo.cpp

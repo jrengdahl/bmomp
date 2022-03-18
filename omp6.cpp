@@ -1,7 +1,9 @@
 // A test program for experiments with OpenMP.
 
-//  omp1.cpp tests
-//  "#pragma omp parallel for"
+//  omp5.cpp tests
+//  reduction,
+//  "#pragma omp atomic" using GOMP_atomic_start and GOMP_atomic_end,
+//  and enables floating point
 
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +13,11 @@
 #include "threadFIFO.hpp"
 #include "libgomp.hpp"
 #include "omp.h"
+
+
+#define CPACR (*(uint32_t volatile *)0xE000ED88)
+#define CPACR_VFPEN 0x00F00000
+
 
 // The DeferFIFO used by yield, for rudimentary time-slicing.
 // Note that the only form of "time-slicing" occurs when a thread
@@ -37,6 +44,8 @@ int start(int argc, char *const argv[])
     Thread::init();                                 // init the bare metal threading system
     libgomp_init();                                 // init OpenMP
 
+    CPACR |= CPACR_VFPEN;                           // enable the floating point coprocessor
+
     Thread::spawn(test, stack);                     // spawn the test thread
 
     // The background loop.
@@ -55,26 +64,29 @@ int start(int argc, char *const argv[])
     }
 
 
-#define LIMIT 64
+#define LIMIT 8
+
+unsigned A[LIMIT];
 
 void test()
     {
-    unsigned array[LIMIT];
-
     printf("hello, world!\n");
 
-    #pragma omp parallel for num_threads(LIMIT)
-    for(int i=0; i<LIMIT; i++)
+    #pragma omp parallel num_threads(LIMIT)
         {
-        array[i] = omp_get_thread_num();
-        }
+        int id = omp_get_thread_num();
 
-    for(int i=0; i<LIMIT; i++)
-        {
-        printf("%u ", array[i]);
-        }
-    printf("\n");
+        printf("id1 = %d\n", id);
 
+        #pragma omp barrier
+
+        #pragma omp master
+        printf("master id = %d\n", id);
+
+        #pragma omp barrier
+
+        printf("id2 = %d\n", id);
+        }                
     }
 
 

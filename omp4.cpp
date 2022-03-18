@@ -1,5 +1,8 @@
 // A test program for experiments with OpenMP.
 
+//  omp4.cpp tests
+//  "#pragma omp atomic" using ldrex and strex
+
 #include <stdint.h>
 #include <stdio.h>
 

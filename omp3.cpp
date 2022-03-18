@@ -1,5 +1,8 @@
 // A test program for experiments with OpenMP.
 
+//  omp3.cpp tests
+//  "#pragma omp critical", GOMP_critical_start, and GOMP_critical_end
+
 #include <stdint.h>
 #include <stdio.h>
 

@@ -1,5 +1,8 @@
 // A test program for experiments with OpenMP.
 
+//  omp2.cpp tests
+//  "#pragma omp barrier" and GOMP_barrier
+
 #include <stdint.h>
 #include <stdio.h>
 

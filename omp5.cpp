@@ -1,6 +1,9 @@
 // A test program for experiments with OpenMP.
-// Demonstrate reduction
 
+//  omp5.cpp tests
+//  reduction,
+//  "#pragma omp atomic" using GOMP_atomic_start and GOMP_atomic_end,
+//  and enables floating point
 
 #include <stdint.h>
 #include <stdio.h>

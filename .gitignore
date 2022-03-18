@@ -5,3 +5,4 @@
 *.map
 /backup
 /foo.cpp
+*.exe

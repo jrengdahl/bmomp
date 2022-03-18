@@ -13,7 +13,7 @@
 
 // The worker thread's stacks
 // The thread number can be determined by  looking at certain bits of the sp.
-static char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__aligned__((8))));
+static char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__aligned__((4096))));    // TODO align to 4K for debug, later make this GOMP_STACK_SIZE
 
 // a thread that waits for a job from OMP
 typedef void JOBFN(void *);
@@ -21,6 +21,7 @@ typedef void JOBFN(void *);
 static int team = 0;
 
 // a job
+// TODO -- perhaps rename this "worker"
 struct job
     {
     Thread worker;          // the thread
@@ -35,9 +36,16 @@ struct job
 // an array of jobs
 static job jobs[GOMP_NUM_THREADS];
 
+// These arrays indexed by "team" should be converted to a pool of structs.
+// I don't think teams are necessarily nested in scope.
 static bool mutex[GOMP_NUM_TEAMS] = {0};
 static int mindex = 0;
 static unsigned single[GOMP_NUM_TEAMS] = {0};
+static int sections_count[GOMP_NUM_TEAMS] = {0};
+static int sections[GOMP_NUM_TEAMS] = {0};
+static int section[GOMP_NUM_TEAMS] = {0};
+
+
 
 // return the number of threads available
 extern "C"
@@ -55,7 +63,7 @@ int omp_get_thread_num()
 
     __asm__ __volatile__("    mov %[sp], sp" : [sp]"=r"(sp));
 
-    return ((sp-base)>>GOMP_STACK_SHIFT) & GOMP_TID_MASK;
+    return (sp-base)/GOMP_STACK_SIZE;
     }
 
 
@@ -99,6 +107,9 @@ void GOMP_parallel(
 
     mutex[team] = false;
     single[team] = 0;
+    sections_count[team] = 0;
+    sections[team] = 0;
+    section[team] = 0;
 
     // setup each member of the team
     for(unsigned i=0; i<num_threads; i++)
@@ -234,6 +245,53 @@ bool GOMP_single_start()
         {
         return false;
         }
+    }
+
+
+
+
+
+extern "C"
+int GOMP_sections_next()                // for each thread that iterates the "sections"
+    {
+    if(section[team] > sections[team])  // if all sections have been executed
+        {
+        section[team] = 0;              // clear the index, it latches at zero
+        }
+
+    if(section[team] == 0)              // if all sections have been run
+        {
+        return 0;                       // return 0, select the "end" action and stop iterating
+        }
+
+    return section[team]++;             // otherwise return the current index and increment it
+    }
+
+extern "C"
+int GOMP_sections_start(int num)        // each team member calls this once at the beginning of sections
+    {
+    if(sections_count[team] == 0)       // when the first thread gets here
+        {
+        sections[team] = num;           // capture the number of sections
+        section[team] = 1;              // init to the first section
+        }
+
+    ++sections_count[team];             // count the number of threads that have started the sections
+
+    return GOMP_sections_next();        // for the rest, start is the same as next
+    }
+
+extern "C"
+void GOMP_sections_end()                // each thread runs this once when all the sections hae been executed
+    {
+    int num = omp_get_num_threads();
+
+    if(sections_count[team] == num)     // if all team members have encountered the "start"
+        {
+        sections_count[team] = 0;       // re-arm the sections start, though note that some may still be in a section
+        }
+
+    GOMP_barrier();                     // hold eeryone here until all have arrived
     }
 
 

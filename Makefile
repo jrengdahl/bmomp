@@ -69,6 +69,7 @@ BINARIES += omp3.bin
 BINARIES += omp4.bin
 BINARIES += omp5.bin
 BINARIES += omp6.bin
+BINARIES += omp7.bin
 
 all: $(BINARIES)
 

@@ -1,8 +1,7 @@
 // A test program for experiments with OpenMP.
 
-//  omp6.cpp tests
-//  "#pragma omp master"
-//  and further testing of barrier
+//  omp7.cpp tests
+//  "#pragma omp single"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -36,12 +35,18 @@ char stack[2048];
 // this is the entry point
 // we want it to be located at the beginning of the binary
 
+
+int arg = 0;
+
 extern "C"
 int start(int argc, char *const argv[])
     {
     app_startup(argv);                              // init the u-boot API
     Thread::init();                                 // init the bare metal threading system
     libgomp_init();                                 // init OpenMP
+
+    if(argc==1)arg = 0;
+    else arg = argv[1][0]&7;
 
     CPACR |= CPACR_VFPEN;                           // enable the floating point coprocessor
 
@@ -63,6 +68,16 @@ int start(int argc, char *const argv[])
     }
 
 
+void spin(int x)
+    {
+    while(x--)
+        {
+        yield();
+        }
+    }
+
+
+
 #define LIMIT 8
 
 unsigned A[LIMIT];
@@ -79,10 +94,10 @@ void test()
 
         #pragma omp barrier
 
-        #pragma omp master
-        printf("master id = %d\n", id);
+        spin(id ^ arg);
 
-        #pragma omp barrier
+        #pragma omp single
+        printf("single id = %d\n", id);
 
         printf("id2 = %d\n", id);
         }                

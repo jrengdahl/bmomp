@@ -33,4 +33,5 @@ for a multi-core version to be developed later. For example, the mutex underlyin
 atomic. This implementation does give correct results on a single-core processor with the above-mentioned
 non-preemptive threading system.
 
-There are test programs, omp1.cpp through omp<n>.cpp to test features as they are added.
+I've been going through Tim Mattson's OpenMP tutorial (https://www.openmp.org/resources/tutorials-articles).
+As I study each example I implement the support for it in libgomp.cpp and create a test (omp<n>.cpp).

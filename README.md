@@ -22,9 +22,16 @@ global data pointer. The use of R11 for the thread stack pointer has two reasons
   using only the non-volatile registers which are not part of the saved context.
 
 libgomp.cpp implements:
-- GOMP_parallel                                 for #pragma omp parallel
-- GOMP_barrier                                  for #pragma omp barrier
-- GOMP_critical_start and GOMP_critical_end     for #pragma omp critical
+- #pragma omp parallel
+- #pragma omp parallel for
+- #pragma omp parallel for reduction
+- #pragma omp barrier
+- #pragma omp critical
+- #pragma omp atomic
+- #pragma omp master
+- #pragma omp single
+- #pragma omp sections
+- omp_lock_t and its operators
 - omp_get_num_threads
 - omp_get_thread_num
 
@@ -34,4 +41,7 @@ atomic. This implementation does give correct results on a single-core processor
 non-preemptive threading system.
 
 I've been going through Tim Mattson's OpenMP tutorial (https://www.openmp.org/resources/tutorials-articles).
-As I study each example I implement the support for it in libgomp.cpp and create a test (omp<n>.cpp).
+As I study each example I implement the support for it in libgomp.cpp and create a test (omp\<n\>.cpp).
+
+And no, I don't know what I'm doing. Like I said, I'm learning OpenMP from the tutorial as I develop the
+implementaion. This actually seems like a good way to learn it thoroughly.

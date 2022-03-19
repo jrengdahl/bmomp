@@ -1,16 +1,17 @@
 // A test program for experiments with OpenMP.
 
-//  omp8.cpp tests
-//  "#pragma omp sections"
+//  omp9.cpp tests
+//  omp_lock_t and its operators
 
 #include <stdint.h>
 #include <stdio.h>
+#include <omp.h>
+#include <math.h>
 
 #include "exports.hpp"
 #include "thread.hpp"
 #include "threadFIFO.hpp"
 #include "libgomp.hpp"
-#include "omp.h"
 
 
 #define CPACR (*(uint32_t volatile *)0xE000ED88)
@@ -37,6 +38,7 @@ char stack[2048];
 
 
 int arg = 0;
+
 
 extern "C"
 int start(int argc, char *const argv[])
@@ -68,77 +70,45 @@ int start(int argc, char *const argv[])
     }
 
 
-void spin(int x)
-    {
-    while(x--)
-        {
-        yield();
-        }
-    }
+#define NBUCKETS 40
+#define RES 1000000
 
-
-void stuff(int id, char c, long count)
-    {
-    printf("begin section %c = %d (%ld)\n", c, id, count);
-    spin(count);
-    printf("end   section %c = %d (%ld)\n", c, id, count);
-    }
-
+int hist[NBUCKETS];
+omp_lock_t locks[NBUCKETS];
 
 void test()
     {
     printf("hello, world!\n");
 
-    #pragma omp parallel num_threads(5)
+    #pragma omp parallel for
+    for(int i=0;i<NBUCKETS; i++)
         {
-        int id = omp_get_thread_num();
+        hist[i] = 0;
+        omp_init_lock(&locks[i]);
+        }
 
-        printf("id1 = %d\n", id);
+    #pragma omp parallel for
+    for(int i=0; i<RES; i++)
+        {
+        double x;
+        double y;
+        int ind;
 
-        #pragma omp sections
+        x = i*2*M_PI/RES;
+        y = sin(x);
+        ind = (int)((y+1)*NBUCKETS/2);
+        if(ind>=0 && ind<NBUCKETS)    
             {
-            #pragma omp section
-                {
-                stuff(id, 'A', 8000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'B', 1000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'C', 7000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'D', 2000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'E', 6000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'F', 3000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'G', 5000000);
-                }
-
-            #pragma omp section
-                {
-                stuff(id, 'H', 4000000);
-                }
+            omp_set_lock(&locks[ind]);
+            hist[ind]++;
+            omp_unset_lock(&locks[ind]);
             }
+        }
 
-        printf("id2 = %d\n", id);
+    for(int i=0; i<NBUCKETS; i++)
+        {
+        printf("%3d %3d\n", i, hist[i]);
+        omp_destroy_lock(&locks[i]);
         }
     }
 

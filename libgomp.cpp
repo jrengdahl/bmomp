@@ -291,7 +291,47 @@ void GOMP_sections_end()                // each thread runs this once when all t
         sections_count[team] = 0;       // re-arm the sections start, though note that some may still be in a section
         }
 
-    GOMP_barrier();                     // hold eeryone here until all have arrived
+    GOMP_barrier();                     // hold everyone here until all have arrived
+    }
+
+
+/////////////
+// LOCKING //
+/////////////
+
+extern "C"
+void omp_init_lock(omp_lock_t *lock)
+    {
+    *lock = 0;
+    }
+
+extern "C"
+int omp_test_lock(omp_lock_t *lock)
+    {
+    return *lock;
+    }
+
+extern "C"
+void omp_set_lock(omp_lock_t *lock)
+    {
+    while(*lock)
+        {
+        yield();
+        }
+
+    *lock = 1;
+    }
+
+extern "C"
+void omp_unset_lock(omp_lock_t *lock)
+    {
+    *lock = 0;
+    }
+
+
+extern "C"
+void omp_destroy_lock(omp_lock_t *lock __attribute__((__unused__)))
+    {
     }
 
 

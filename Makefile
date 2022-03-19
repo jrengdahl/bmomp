@@ -71,6 +71,9 @@ BINARIES += omp5.bin
 BINARIES += omp6.bin
 BINARIES += omp7.bin
 BINARIES += omp8.bin
+BINARIES += omp9.bin
+
+LIB += -L c:/cross/arm-cortexm7-eabi/usr/arm-cortexm7-eabi/lib
 
 all: $(BINARIES)
 
@@ -100,7 +103,7 @@ test.axf : test.o thread.o stubs.o
 
 %.axf : %.o thread.o libgomp.o stubs.o
 	@echo [LD] $@
-	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
+	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a $(LIB) -lm -Map=$(basename $@).map 
 
 %.bin : %.axf
 	@echo [OBJCOPY] $<

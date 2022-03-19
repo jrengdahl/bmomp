@@ -103,7 +103,7 @@ test.axf : test.o thread.o stubs.o
 
 %.axf : %.o thread.o libgomp.o stubs.o
 	@echo [LD] $@
-	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a $(LIB) -lm -Map=$(basename $@).map 
+	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a $(LIB) -lm -Map=$(basename $@).map --no-warn-mismatch
 
 %.bin : %.axf
 	@echo [OBJCOPY] $<

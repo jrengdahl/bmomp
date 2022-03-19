@@ -4,6 +4,9 @@
 // This is a simplistic implementation for a single-core processor for learning, development, and testing.
 //
 // Target is an ARM CPU with very simple bare metal threading support.
+//
+// These implementations only work on a single-core,non-preemtive system.
+
 
 #include <stdint.h>
 #include <omp.h>
@@ -36,7 +39,7 @@ struct job
 // an array of jobs
 static job jobs[GOMP_NUM_THREADS];
 
-// These arrays indexed by "team" should be converted to a pool of structs.
+// These arrays indexed by "team" should be converted to a pool of "team" structs.
 // I don't think teams are necessarily nested in scope.
 static bool mutex[GOMP_NUM_TEAMS] = {0};
 static int mindex = 0;
@@ -306,12 +309,6 @@ void omp_init_lock(omp_lock_t *lock)
     }
 
 extern "C"
-int omp_test_lock(omp_lock_t *lock)
-    {
-    return *lock;
-    }
-
-extern "C"
 void omp_set_lock(omp_lock_t *lock)
     {
     while(*lock)
@@ -328,10 +325,101 @@ void omp_unset_lock(omp_lock_t *lock)
     *lock = 0;
     }
 
+extern "C"
+int omp_test_lock(omp_lock_t *lock)
+    {
+    if(*lock)
+        {
+        return 0;
+        }
+
+    *lock = 1;
+    return 1;
+    }
 
 extern "C"
-void omp_destroy_lock(omp_lock_t *lock __attribute__((__unused__)))
+void omp_destroy_lock(omp_lock_t *lock)
     {
+    *lock = 0;
+    }
+
+
+
+////////////////////
+// NESTED LOCKING //
+////////////////////
+
+extern "C"
+void omp_init_nest_lock(omp_nest_lock_t *lock)
+    {
+    lock->lock = 0;
+    lock->count = 0;
+    lock->owner = 0;
+    }
+
+extern "C"
+void omp_set_nest_lock(omp_nest_lock_t *lock)
+    {
+    int id = omp_get_thread_num();
+
+    if(lock->lock && lock->owner == id)
+        {
+        ++lock->count;
+        return;
+        }
+ 
+    while(lock->lock==1)
+        {
+        yield();
+        }
+
+    lock->lock = 1;
+    lock->count = 1;
+    lock->owner = id;
+    }
+
+extern "C"
+void omp_unset_nest_lock(omp_nest_lock_t *lock)
+    {
+    // It is assumed that the caller matches the owner. This is not checked.
+    // It is assumed that count>0. This is not checked.
+
+    --lock->count;
+    if(lock->count == 0)
+        {
+        lock->owner = 0;
+        lock->lock = 0;
+        }
+    }
+
+extern "C"
+int omp_test_nest_lock(omp_nest_lock_t *lock)
+    {
+    int id = omp_get_thread_num();
+
+    if(lock->lock && lock->owner == id)
+        {
+        ++lock->count;
+        return lock->count;
+        }
+ 
+    if(lock->lock == 0)
+        {
+        lock->lock = 1;
+        lock->count = 1;
+        lock->owner = id;
+        return 1;
+        }
+
+    return 0;
+    }
+
+extern "C"
+void omp_destroy_nest_lock(omp_nest_lock_t *lock)
+    {
+    lock->lock = 0;
+    lock->count = 0;
+    lock->owner = 0;
     }
 
 

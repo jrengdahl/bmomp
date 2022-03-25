@@ -6,6 +6,7 @@
 
 const int COLORS = 4;
 const int MAX = 64;
+const int THREADS = 4096;
 
 
 inline unsigned cget(int i, unsigned input)
@@ -23,6 +24,9 @@ int plevel = MAX;
 int output[MAX];
 int permutations = 0;
 bool verbose = false;
+int maxthread = 0;
+int ids[THREADS+10];
+
 
 void permute(unsigned input, int (&output)[MAX], int colors, int step, int left)
     {
@@ -51,8 +55,12 @@ void permute(unsigned input, int (&output)[MAX], int colors, int step, int left)
             if(cget(i, input) > 0)
                 {
                 output[step] = i;
-                #pragma omp task firstprivate(output) if step <= plevel
+                #pragma omp task firstprivate(output) if(step < plevel)
+                    {
+                    int id = omp_get_thread_num();
+                    ids[id] = id;
                     permute(cdec(i, input), output, colors, step+1, left-1);
+                    }
                 }
             }
         #pragma omp taskwait
@@ -92,11 +100,14 @@ int main(int argc, char **argv)
 
     for(auto &x : output) x = 0;
 
-    #pragma omp parallel num_threads(256)
+    #pragma omp parallel num_threads(THREADS)
     #pragma omp single
     permute(input, output, colors, 0, colors*n);
 
+    for(auto id: ids)maxthread = id>maxthread?id:maxthread;
+
     printf("permutations = %d\n", permutations);
+    printf("maxthread = %d\n", maxthread);
 
     return 0;
     }

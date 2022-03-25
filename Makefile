@@ -62,7 +62,7 @@ SECT += -j .dtb.init.rodata
 
 BINARIES += hello.bin
 BINARIES += hello_cpp.bin
-BINARIES += test.bin
+BINARIES += threadtest.bin
 BINARIES += omp1.bin
 BINARIES += omp2.bin
 BINARIES += omp3.bin
@@ -97,7 +97,7 @@ hello_cpp.axf : hello_cpp.o stubs.o
 	@echo [LD] $@
 	@$(CROSS)ld.bfd -Ttext=0x24000000 -g -o $@ -e hello $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 
-test.axf : test.o thread.o stubs.o
+threadtest.axf : threadtest.o thread.o stubs.o
 	@echo [LD] $@
 	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 

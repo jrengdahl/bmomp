@@ -21,7 +21,6 @@ static char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__alig
 // a thread that waits for a job from OMP
 typedef void JOBFN(void *);
 
-static int team = 0;
 
 // a job
 // TODO -- perhaps rename this "worker"
@@ -49,25 +48,10 @@ static int sections[GOMP_NUM_TEAMS] = {0};
 static int section[GOMP_NUM_TEAMS] = {0};
 
 
+int dyn_var = 0;
 
-// return the number of threads available
-extern "C"
-int omp_get_num_threads()
-    {
-    return GOMP_NUM_THREADS;
-    }
-
-
-extern "C"
-int omp_get_thread_num()
-    {
-    uintptr_t sp;
-    uintptr_t base = (uintptr_t)&gomp_stacks;
-
-    __asm__ __volatile__("    mov %[sp], sp" : [sp]"=r"(sp));
-
-    return (sp-base)/GOMP_STACK_SIZE;
-    }
+static int gomp_num_threads = GOMP_NUM_THREADS;
+static int team = 0;
 
 
 
@@ -90,6 +74,20 @@ static void gomp_worker()
 
 
 
+// Powerup initialization of libgomp.
+// Must be called after thread and threadFIFO are setup.
+// It spawns a pool of OMP worker threads.
+
+void libgomp_init()
+    {
+    for(int i=0; i<GOMP_NUM_THREADS; i++)
+        {
+        Thread::spawn(gomp_worker, gomp_stacks[i]);         
+        }
+    }
+
+
+
 extern "C"
 void GOMP_parallel(
     JOBFN *fn,                                      // the thread code
@@ -101,7 +99,12 @@ void GOMP_parallel(
     // TODO fix this to handle teams of less than max threads
     // starting at other than i=0
 
-    if(num_threads == 0 || num_threads > GOMP_NUM_THREADS)
+    if(num_threads == 0)
+        {
+        num_threads = gomp_num_threads;
+        }
+
+    if(num_threads > GOMP_NUM_THREADS)
         {
         num_threads = GOMP_NUM_THREADS;
         }
@@ -425,19 +428,91 @@ void omp_destroy_nest_lock(omp_nest_lock_t *lock)
 
 
 
-
-
-// Powerup initialization of libgomp.
-// Must be called after thread and threadFIFO are setup.
-// It spawns a pool of OMP worker threads.
-
-void libgomp_init()
+// return the number of threads available
+extern "C"
+int omp_get_num_threads()
     {
-    for(int i=0; i<GOMP_NUM_THREADS; i++)
-        {
-        Thread::spawn(gomp_worker, gomp_stacks[i]);         
-        }
+    return GOMP_NUM_THREADS;
+    }
+
+
+extern "C"
+int omp_get_thread_num()
+    {
+    uintptr_t sp;
+    uintptr_t base = (uintptr_t)&gomp_stacks;
+
+    __asm__ __volatile__("    mov %[sp], sp" : [sp]"=r"(sp));
+
+    return (sp-base)/GOMP_STACK_SIZE;
+    }
+
+
+// extern "C" void omp_set_num_threads (int);
+// extern "C" int omp_get_max_threads (void);
+
+
+
+extern "C"
+void omp_set_dynamic(int dyn)
+    {
+    dyn_var = dyn;
+    }
+
+extern "C"
+int omp_get_dynamic(void)
+    {
+    return dyn_var;
     }
 
 
 
+// extern "C" int omp_get_num_teams (void);
+// extern "C" int omp_get_team_num (void);
+// extern "C" int omp_get_team_size (int);
+
+
+// extern "C" int omp_get_num_procs (void);
+// extern "C" int omp_in_parallel (void);
+// extern "C" void omp_set_nested (int);
+// extern "C" int omp_get_nested (void);
+// extern "C" void omp_init_lock_with_hint (omp_lock_t *, omp_sync_hint_t);
+// extern "C" void omp_init_nest_lock_with_hint (omp_nest_lock_t *, omp_sync_hint_t);
+// extern "C" double omp_get_wtime (void);
+// extern "C" double omp_get_wtick (void);
+// extern "C" void omp_set_schedule (omp_sched_t, int);
+// extern "C" void omp_get_schedule (omp_sched_t *, int *);
+// extern "C" int omp_get_thread_limit (void);
+// extern "C" void omp_set_max_active_levels (int);
+// extern "C" int omp_get_max_active_levels (void);
+// extern "C" int omp_get_level (void);
+// extern "C" int omp_get_ancestor_thread_num (int);
+// extern "C" int omp_get_active_level (void);
+// extern "C" int omp_in_final (void);
+// extern "C" int omp_get_cancellation (void);
+// extern "C" omp_proc_bind_t omp_get_proc_bind (void);
+// extern "C" int omp_get_num_places (void);
+// extern "C" int omp_get_place_num_procs (int);
+// extern "C" void omp_get_place_proc_ids (int, int *);
+// extern "C" int omp_get_place_num (void);
+// extern "C" int omp_get_partition_num_places (void);
+// extern "C" void omp_get_partition_place_nums (int *);
+// extern "C" void omp_set_default_device (int);
+// extern "C" int omp_get_default_device (void);
+// extern "C" int omp_get_num_devices (void);
+// extern "C" int omp_is_initial_device (void);
+// extern "C" int omp_get_initial_device (void);
+// extern "C" int omp_get_max_task_priority (void);
+// extern "C" void *omp_target_alloc (__SIZE_TYPE__, int);
+// extern "C" void omp_target_free (void *, int);
+// extern "C" int omp_target_is_present (const void *, int);
+// extern "C" int omp_target_memcpy (void *, const void *, __SIZE_TYPE__, __SIZE_TYPE__, __SIZE_TYPE__, int, int);
+// extern "C" int omp_target_memcpy_rect (void *, const void *, __SIZE_TYPE__, int, const __SIZE_TYPE__ *, const __SIZE_TYPE__ *, const __SIZE_TYPE__ *, const __SIZE_TYPE__ *, const __SIZE_TYPE__ *, int, int);
+// extern "C" int omp_target_associate_ptr (const void *, const void *, __SIZE_TYPE__, __SIZE_TYPE__, int);
+// extern "C" int omp_target_disassociate_ptr (const void *, int);
+// extern "C" void omp_set_affinity_format (const char *);
+// extern "C" __SIZE_TYPE__ omp_get_affinity_format (char *, __SIZE_TYPE__);
+// extern "C" void omp_display_affinity (const char *);
+// extern "C" __SIZE_TYPE__ omp_capture_affinity (char *, __SIZE_TYPE__, const char *);
+// extern "C" int omp_pause_resource (omp_pause_resource_t, int);
+// extern "C" int omp_pause_resource_all (omp_pause_resource_t);

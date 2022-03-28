@@ -1,5 +1,20 @@
 CROSS=arm-cortexm7-eabi-
 
+BINARIES += hello.bin
+BINARIES += hello_cpp.bin
+BINARIES += threadtest.bin
+BINARIES += omp1.bin
+BINARIES += omp2.bin
+BINARIES += omp3.bin
+BINARIES += omp4.bin
+BINARIES += omp5.bin
+BINARIES += omp6.bin
+BINARIES += omp7.bin
+BINARIES += omp8.bin
+BINARIES += omp9.bin
+BINARIES += omp10.bin
+
+
 OPT += -march=armv7-m
 OPT += -ffixed-r9
 OPT += -ffixed-r11
@@ -60,19 +75,6 @@ SECT += -j .text_rest
 SECT += -j .dtb.init.rodata
 
 
-BINARIES += hello.bin
-BINARIES += hello_cpp.bin
-BINARIES += threadtest.bin
-BINARIES += omp1.bin
-BINARIES += omp2.bin
-BINARIES += omp3.bin
-BINARIES += omp4.bin
-BINARIES += omp5.bin
-BINARIES += omp6.bin
-BINARIES += omp7.bin
-BINARIES += omp8.bin
-BINARIES += omp9.bin
-
 LIB += -L c:/cross/arm-cortexm7-eabi/usr/arm-cortexm7-eabi/lib
 
 all: $(BINARIES)
@@ -101,7 +103,7 @@ threadtest.axf : threadtest.o thread.o stubs.o
 	@echo [LD] $@
 	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a -Map=$(basename $@).map 
 
-%.axf : %.o thread.o libgomp.o stubs.o
+%.axf : %.o thread.o libgomp.o atoi.o stubs.o
 	@echo [LD] $@
 	@$(CROSS)ld.bfd -T lscript.ld -g -o $@ -e start $^ ../u-boot/arch/arm/lib/lib.a $(LIB) -lm -Map=$(basename $@).map --no-warn-mismatch
 

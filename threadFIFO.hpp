@@ -15,7 +15,7 @@
 #include "thread.hpp"
 #include "FIFO.hpp"
 
-static const unsigned DEFER_FIFO_DEPTH = 31;
+static const unsigned DEFER_FIFO_DEPTH = 63;
 
 template<unsigned N>
 class threadFIFO : public FIFO<Thread, N>

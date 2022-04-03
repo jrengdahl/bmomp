@@ -1,3 +1,4 @@
+extern "C"
 int atoi(const char *p)
     {
     int value = 0;

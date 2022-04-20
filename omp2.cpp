@@ -20,7 +20,7 @@
 threadFIFO<DEFER_FIFO_DEPTH> DeferFIFO;
 
 // forward declaration of the test thread
-// We want the test thread to be later in the proram so that "start" is at the beginning of the binary,
+// We want the test thread to be later in the program so that "start" is at the beginning of the binary,
 // so we can say "go 24000000" and not have to look up the entry point in the map.
 void test();
 
@@ -44,7 +44,7 @@ int start(int argc, char *const argv[])
     // Note that this code will only spin if
     // -- all threads have yielded or suspended, or
     // -- the test thread has terminated.
-    while(!Thread::done(stack))                     // while the test thread is stil running
+    while(!Thread::done(stack))                     // while the test thread is still running
         {
         undefer();                                  // keep trying to wake threads
         }
@@ -62,7 +62,6 @@ unsigned B[LIMIT];
 
 void test()
     {
-
     printf("hello, world!\n");
 
     #pragma omp parallel
@@ -75,10 +74,15 @@ void test()
 
     for(int i=0; i<LIMIT; i++)
         {
-        printf("%u ", B[i]);                        // print C
+        printf("%2u ", A[i]);                       // print A
         }
     printf("\n");
 
+    for(int i=0; i<LIMIT; i++)
+        {
+        printf("%2u ", B[i]);                        // print B
+        }
+    printf("\n");
     }
 
 

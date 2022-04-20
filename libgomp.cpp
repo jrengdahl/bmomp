@@ -19,7 +19,7 @@
 // The threads' stacks
 // The thread number can be determined by looking at certain bits of the sp.
 
-static char gomp_stacks[GOMP_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__aligned__((4096))));    // TODO align to 4K for debug, later make this GOMP_STACK_SIZE
+static char gomp_stacks[GOMP_MAX_NUM_THREADS][GOMP_STACK_SIZE] __attribute__((__aligned__((4096))));    // TODO align to 4K for debug, later make this GOMP_STACK_SIZE
 
 
 
@@ -50,15 +50,15 @@ static FIFO<task *, GOMP_NUM_TASKS> ready_tasks;
 struct omp_thread
     {
     Thread thread;          // the thread's registers
-    struct task *task = 0;  // the thread's implicit task
-    int team = 0;           // the current team number, nonzero if running
+    struct task *task = 0;  // the thread's implicit task, nonzero if running
+    int team = 0;           // the current team number
     unsigned single = 0;    // counts the number of "#pragma omp single" seen
     bool arrived = false;   // arrived at a barrier, waiting for other threads to arrive
     bool mwaiting = false;  // waiting on a mutex
     };
 
 // an array of omp_threads
-static omp_thread omp_threads[GOMP_NUM_THREADS];
+static omp_thread omp_threads[GOMP_MAX_NUM_THREADS];
 
 
 struct team
@@ -97,10 +97,11 @@ static void gomp_worker()
             fn = omp_threads[id].task->fn;              // run the assigned implicit task
             data = omp_threads[id].task->data;
             fn(data);
-            task_pool.add(omp_threads[id].task);
-            omp_threads[id].task = 0;
+
+            task_pool.add(omp_threads[id].task);        // return the task to the pool
+            omp_threads[id].task = 0;                   // forget the completed task
             }
-        else if(ready_tasks.take(task))                // if there are any explicit tasks waiting for a thread
+        else if(ready_tasks.take(task))                 // if there are any explicit tasks waiting for a thread
             {
             fn = task->fn;                              // run the explicit task
             data = task->data;
@@ -108,8 +109,7 @@ static void gomp_worker()
             }
         else
             {
-            omp_threads[id].team = 0;                   // zero the team to indicate the member has finished
-            omp_threads[id].thread.suspend();           // wait for an new assignnment
+            yield();
             }
         }
     }
@@ -127,7 +127,7 @@ void libgomp_init()
         task_pool.add(&task);
         }
 
-    for(int i=0; i<GOMP_NUM_THREADS; i++)           // start all the omp_threads
+    for(int i=0; i<GOMP_MAX_NUM_THREADS; i++)       // start all the omp_threads
         {
         Thread::spawn(gomp_worker, gomp_stacks[i]);         
         }
@@ -138,19 +138,21 @@ void libgomp_init()
 extern "C"
 void GOMP_parallel(
     TASKFN *fn,                                     // the thread code
-    void *data,                                     // the team local data
+    void *data,                                     // the thread local data
     unsigned num_threads,                           // the requested number of threads
     unsigned flags __attribute__((__unused__)))     // flags (ignored for now)
     {
     if(num_threads == 0)
         {
-        num_threads = gomp_num_threads;
+        num_threads = GOMP_DEFAULT_NUM_THREADS;
         }
 
-    if(num_threads > GOMP_NUM_THREADS)
+    if(num_threads > GOMP_MAX_NUM_THREADS)
         {
-        num_threads = GOMP_NUM_THREADS;
+        num_threads = GOMP_MAX_NUM_THREADS;
         }
+
+    gomp_num_threads = num_threads;
 
     ++team;
 
@@ -158,30 +160,28 @@ void GOMP_parallel(
     teams[team].single = 0;
     teams[team].sections_count = 0;
     teams[team].sections = 0;
-    teams[team] .section= 0;
-
-    // setup each member of the team
-    for(unsigned i=0; i<num_threads; i++)
-        {
-        task_pool.take(omp_threads[i].task);
-        omp_threads[i].task->fn = fn;
-        omp_threads[i].task->data = data;
-        omp_threads[i].arrived = false;
-        omp_threads[i].mwaiting = false;
-        omp_threads[i].single = 0;
-        omp_threads[i].team = team;
-        }
+    teams[team].section= 0;
 
     // start each member of the team
     for(unsigned i=0; i<num_threads; i++)
         {
-        omp_threads[i].thread.resume();
+        struct task *task = 0;
+
+        task_pool.take(task);
+        task->fn = fn;
+        task->data = data;
+
+        omp_threads[i].arrived = false;
+        omp_threads[i].mwaiting = false;
+        omp_threads[i].single = 0;
+        omp_threads[i].team = team;
+        omp_threads[i].task = task;                     // this field becoming non-zero kicks off the implicit task
         }
-    
+
     // wait for each team member to complete
     for(unsigned i=0; i<num_threads; i++)
         {
-        while(omp_threads[i].team == team)
+        while(omp_threads[i].task)
             {
             yield();
             }
@@ -194,15 +194,14 @@ void GOMP_parallel(
 extern "C"
 void GOMP_barrier()
     {
-    int id = omp_get_thread_num();
-    int num = omp_get_num_threads();
+    int id = omp_get_thread_num();              // the id if this thread
+    int num = omp_get_num_threads();            // the number of threads in the current team
 
     omp_threads[id].arrived = true;             // signal that this thread has reached the barrier
 
     for(int i=0; i<num; i++)                    // see if any other threads in the team have not yet reached the barrier
         {
-        if(omp_threads[i].team == team
-        && omp_threads[i].arrived == false)
+        if(omp_threads[i].arrived == false)
             {                                   // get here if any team member has not yet arrived
             omp_threads[id].thread.suspend();   // suspend this thread until all other threads have arrived
             return;                             // when resumed, some other thread has done all the barrier cleanup work, so just keep going
@@ -213,16 +212,12 @@ void GOMP_barrier()
 
     for(int i=0; i<num; i++)                    // clear the arrived flag for all team members
         {
-        if(omp_threads[i].team == team)
-            {
-            omp_threads[i].arrived = false;     // clear the arrived-at-barrier flag
-            }
+        omp_threads[i].arrived = false;         // clear the arrived-at-barrier flag
         }
 
     for(int i=0; i<num; i++)                    // resume all other threads in the team
         {
-        if(i != id                              // don't try to resume self
-        && omp_threads[i].team == team)
+        if(i != id)                             // don't try to resume self
             {
             omp_threads[i].thread.resume();     // resume the team member
             }
@@ -266,8 +261,7 @@ void GOMP_critical_end()
         int m = mindex;
         mindex = (mindex+1)%num;
 
-        if(omp_threads[m].team == team
-        && omp_threads[m].mwaiting == true)
+        if(omp_threads[m].mwaiting == true)
             {
             omp_threads[m].thread.resume();     // resume the next thread in the rotation
             return;
@@ -520,7 +514,7 @@ void GOMP_task (    void (*fn) (void *),
 extern "C"
 int omp_get_num_threads()
     {
-    return GOMP_NUM_THREADS;
+    return gomp_num_threads;
     }
 
 
@@ -532,7 +526,7 @@ int omp_get_thread_num()
 
     __asm__ __volatile__("    mov %[sp], sp" : [sp]"=r"(sp));
 
-    if(sp < base || sp > (uintptr_t)&gomp_stacks[GOMP_NUM_THREADS])
+    if(sp < base || sp > (uintptr_t)&gomp_stacks[GOMP_MAX_NUM_THREADS])
         {
         return 0;
         }

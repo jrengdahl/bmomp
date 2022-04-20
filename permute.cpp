@@ -40,12 +40,12 @@ int ids[THREADS+10];                // an array to record what threads ran
 
 void permute(unsigned input, unsigned char (&output)[MAX], int step, int left)
     {
-    int id = omp_get_thread_num();                                  // record the thread number
-    ids[id] = id;                                                   // for analysis only, it's not used in the permutation calculation
+    int id = omp_get_thread_num();                                          // record the thread number
+    ids[id] = id;                                                           // for analysis only, it's not used in the permutation calculation
 
-    if(left == 0)                                                   // if all the balls have been chosen
+    if(left == 0)                                                           // if all the balls have been chosen
         {
-        if(verbose)                                                 // if verbose, print out the permutaiton
+        if(verbose)                                                         // if verbose, print out the permutaiton
             {
             #pragma omp critical
                 {        
@@ -60,7 +60,7 @@ void permute(unsigned input, unsigned char (&output)[MAX], int step, int left)
         #pragma omp atomic
             ++permutations;
         }
-    else                                                            // if not done yet
+    else                                                                    // if not done yet
         {
         for(int i=0; i<colors; i++)                                         // for each possible color
             {
@@ -85,7 +85,8 @@ int main(int argc, char **argv)
     unsigned input;
     unsigned char output[MAX];
 
-    if(argc>1)colors=atoi(argv[1]);                     // first arg: the number of color
+
+    if(argc>1)colors=atoi(argv[1]);                     // first arg: the number of colors
     else colors=2;
 
     if(argc>2)n=atoi(argv[2]);                          // second arg: how many balls there are of each color
@@ -94,6 +95,7 @@ int main(int argc, char **argv)
     if(argc>3)plevel = atoi(argv[3]);                   // third arg: the number of levels to spawn new threads
 
     if(argc>4)verbose=true;                             // fourth arg, be verbose if any arg given
+
 
     if(colors > COLORS || n*colors > MAX)               // check validity of inputs
         {

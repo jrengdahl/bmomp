@@ -14,7 +14,9 @@ BINARIES += omp8.bin
 BINARIES += omp9.bin
 BINARIES += omp10.bin
 BINARIES += hello.bin
+BINARIES += permute.bin
 BINARIES += linpack.bin
+BINARIES += calibrate.bin
 
 
 OPT += -march=armv7-m
@@ -121,7 +123,8 @@ omp%.axf : omp%.o thread.o libgomp.o atoi.o stubs.o
 	@echo [OBJCOPY] $<
 	@$(CROSS)objcopy $(SECT) -O binary $< $@
 
-.PRECIOUS: %.axf %.o
+
+.PRECIOUS : %.axf omp%.axf %.o
 
 
 clean:

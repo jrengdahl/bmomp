@@ -68,14 +68,14 @@ void test()
     #pragma omp parallel
         {
         int i = omp_get_thread_num();
-        A[i] = i;
-        #pragma omp barrier
-        B[i] = A[(i+1)%LIMIT];
+        A[i] = i;                                   // fill each element of A with the number of the thread that processed that element
+        #pragma omp barrier                         // wait until all threads have done so
+        B[i] = A[(i+1)%LIMIT];                      // copy A[i+1] to B[i]
         }
 
     for(int i=0; i<LIMIT; i++)
         {
-        printf("%u ", B[i]);
+        printf("%u ", B[i]);                        // print C
         }
     printf("\n");
 

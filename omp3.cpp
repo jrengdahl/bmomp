@@ -20,7 +20,7 @@
 threadFIFO<DEFER_FIFO_DEPTH> DeferFIFO;
 
 // forward declaration of the test thread
-// We want the test thread to be later in the proram so that "start" is at the beginning of the binary,
+// We want the test thread to be later in the program so that "start" is at the beginning of the binary,
 // so we can say "go 24000000" and not have to look up the entry point in the map.
 void test();
 

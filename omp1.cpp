@@ -55,7 +55,7 @@ int start(int argc, char *const argv[])
     }
 
 
-#define LIMIT 64
+#define LIMIT 32
 
 void test()
     {
@@ -66,15 +66,14 @@ void test()
     #pragma omp parallel for num_threads(LIMIT)
     for(int i=0; i<LIMIT; i++)
         {
-        array[i] = omp_get_thread_num();
+        array[i] = omp_get_thread_num();                // fill an array with the number of the thread that procsed each element of the array
         }
 
     for(int i=0; i<LIMIT; i++)
         {
-        printf("%u ", array[i]);
+        printf("%u ", array[i]);                        // print the array
         }
     printf("\n");
-
     }
 
 

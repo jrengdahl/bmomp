@@ -81,7 +81,7 @@ void permute(unsigned input, unsigned char (&output)[MAX], int step, int left)
 
 int main(int argc, char **argv)
     {
-    int n;
+    int balls;
     unsigned input;
     unsigned char output[MAX];
 
@@ -89,15 +89,15 @@ int main(int argc, char **argv)
     if(argc>1)colors=atoi(argv[1]);                     // first arg: the number of colors
     else colors=2;
 
-    if(argc>2)n=atoi(argv[2]);                          // second arg: how many balls there are of each color
-    else n=2;
+    if(argc>2)balls=atoi(argv[2]);                      // second arg: how many balls there are of each color
+    else balls=2;
 
     if(argc>3)plevel = atoi(argv[3]);                   // third arg: the number of levels to spawn new threads
 
     if(argc>4)verbose=true;                             // fourth arg, be verbose if any arg given
 
 
-    if(colors > COLORS || n*colors > MAX)               // check validity of inputs
+    if(colors > COLORS || colors*balls > MAX)           // check validity of inputs
         {
         printf("too many\n");
         return 0;
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     input = 0;                                          // init the input
     for(int i=0; i<colors; i++)
         {
-        input |= n<<(i*8);
+        input |= balls<<(i*8);
         }
 
     for(auto &x : output) x = 0;                        // init the output
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 
     #pragma omp parallel num_threads(THREADS)           // kick off the permuter
     #pragma omp single
-    permute(input, output, 0, colors*n);
+    permute(input, output, 0, colors*balls);
 
     for(auto id: ids)maxthread = id>maxthread?id:maxthread; // figure out how many threads were used
 

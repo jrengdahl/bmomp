@@ -44,7 +44,6 @@ int colors = 2;                     // the number of colors for this test
 int balls;                          // the number of balls per color
 int plevel = 0;                     // max level to make parallel
 int permutations = 0;               // total number of permutations
-bool verbose = false;               // whether to print each permutation
 int ids[THREADS+10];                // an array to record what threads ran
 int maxthread = 0;                  // the highest thraed number that was spawned
 
@@ -77,12 +76,12 @@ int start(int argc, char *const argv[])
 
     if(argc>3)plevel = atoi(argv[3]);               // third arg: the number of levels to spawn new threads
 
-    if(argc>4)verbose=true;                         // fourth arg, be verbose if any arg given
+    if(argc>4)omp_verbose=atoi(argv[4]);            // fourth arg, verbosity level
 
 
     Thread::spawn(test, stack);                     // spawn the test thread
 
-    // The background loop.
+        // The background loop.
     // Loop until the test thread terminates.
     // Note that this code will only spin if
     // -- all threads have yielded or suspended, or
@@ -125,13 +124,13 @@ void permute(unsigned input, unsigned char (&output)[MAX], int step, int left)
 
     if(left == 0)                                                   // if all the balls have been chosen
         {
-        if(verbose)                                                 // if verbose, print out the permutaiton
+        if(omp_verbose>=1)                                          // if verbose, print out the permutaiton
             {
             #pragma omp critical
                 {        
                 for(int i=0; i<step; i++)
                     {
-                    if(verbose)printf("%u ", output[i]);
+                    printf("%u ", output[i]);
                     }
                 printf(" (%d)\n", omp_get_thread_num());
                 }

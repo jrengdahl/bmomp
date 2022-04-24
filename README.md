@@ -1,12 +1,14 @@
 # bmomp
 Bare Metal OpenMP
 
-At the moment this is a very rough development project, with a lot of experimentation going on.
+This is a rapidly changing development project, with a lot of experimentation going on.
 
 The objective is to get OpenMP working on a bare metal microprocessor. The initial experimentation
 is being done on a Cortex-M7. OpenMP may not make a lot of sense on a single-core CPU, but with an
-underlying thread switching mechanism, it is a useful platform for initial development. Later efforts
-will use a NXP quad-core Cortex-A9.
+underlying thread switching mechanism, it is a useful platform for initial development. An advantage
+of developing on a single-core platform is that I can create the broad brush strokes without having
+to worry about details like coherency and multi-core synchronization.
+Later efforts will use a NXP quad-core Cortex-A9.
 
 The base software is u-boot running from flash (see https://github.com/jrengdahl/u-boot).
 
@@ -31,6 +33,7 @@ libgomp.cpp implements:
 - #pragma omp master
 - #pragma omp single
 - #pragma omp sections
+- #pragma omp task
 - omp_lock_t and its operators
 - omp_get_num_threads
 - omp_get_thread_num
@@ -44,4 +47,4 @@ I've been going through Tim Mattson's OpenMP tutorial (https://www.openmp.org/re
 As I study each example I implement the support for it in libgomp.cpp and create a test (omp\<n\>.cpp).
 
 And no, I don't know what I'm doing. Like I said, I'm learning OpenMP from the tutorial as I develop the
-implementaion. This actually seems like a good way to learn it thoroughly.
+implementation. This actually seems like a good way to learn it thoroughly.

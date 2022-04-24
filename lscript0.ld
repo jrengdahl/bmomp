@@ -14,7 +14,6 @@ SECTIONS
     .text :
         {
          _text_start = .;
-        startup.o(.text.*)
         *(.text.*)
         KEEP (*(.init))
         KEEP (*(.fini))

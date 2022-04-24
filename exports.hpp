@@ -34,6 +34,8 @@ long simple_strtol(const char *cp, char **endp, unsigned int base);
 int strcmp(const char *cs, const char *ct);
 unsigned long ustrtoul(const char *cp, char **endp, unsigned int base);
 unsigned long long ustrtoull(const char *cp, char **endp, unsigned int base);
+void *malloc(unsigned size);
+void free(void *addr);
 
 #ifdef __cplusplus
 };

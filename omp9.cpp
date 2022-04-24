@@ -92,16 +92,16 @@ void test()
         {
         double x;
         double y;
-        int ind;
+        int index;
 
         x = i*2*M_PI/RES;
         y = sin(x);
-        ind = (int)((y+1)*NBUCKETS/2);
-        if(ind>=0 && ind<NBUCKETS)    
+        index = (int)((y+1)*NBUCKETS/2);
+        if(index>=0 && index<NBUCKETS)    
             {
-            omp_set_lock(&locks[ind]);
-            hist[ind]++;
-            omp_unset_lock(&locks[ind]);
+            omp_set_lock(&locks[index]);
+            hist[index]++;
+            omp_unset_lock(&locks[index]);
             }
         }
 

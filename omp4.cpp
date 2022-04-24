@@ -80,10 +80,17 @@ void test()
 
     for(int i=0; i<LIMIT; i++)
         {
-        printf("%u ", B[i]);
+        printf("%2u ", A[i]);                       // print A
         }
-    printf("\nsum = %u \n", sum);
+    printf("\n");
 
+    for(int i=0; i<LIMIT; i++)
+        {
+        printf("%2u ", B[i]);                        // print B
+        }
+    printf("\n");
+
+    printf("sum = %u \n", sum);
     }
 
 

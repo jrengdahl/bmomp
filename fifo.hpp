@@ -66,7 +66,7 @@ class FIFO
             }
 
         Data[curNextIn] = value;                                                    // store the data to the owned slot
-        COMPILE_BARRIER();
+        COMPILE_BARRIER;
         nextIn = newNextIn;                                                         // save new index
 
         return true;                                                                // return success
@@ -93,7 +93,7 @@ class FIFO
             }
 
         value = Data[curNextOut];                                                   // get the value from the current slot
-        COMPILE_BARRIER();
+        COMPILE_BARRIER;
         nextOut = (curNextOut + 1) % (N + 1);                                       // calc index of next slot
 
         return true;                                                                // return true, a value was returned

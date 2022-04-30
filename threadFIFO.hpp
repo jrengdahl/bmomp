@@ -47,7 +47,7 @@ class threadFIFO : public FIFO<Thread, N>
         :
         );
 
-        COMPILE_BARRIER();
+        COMPILE_BARRIER;
         this->nextIn = newNextIn;                                                   // store new index
         }
 
@@ -74,7 +74,7 @@ class threadFIFO : public FIFO<Thread, N>
         :
         );
 
-        COMPILE_BARRIER();
+        COMPILE_BARRIER;
         this->nextOut = (curNextOut + 1) % (N + 1);                                 // calc index of next slot
         }
     };

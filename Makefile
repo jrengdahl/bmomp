@@ -11,12 +11,13 @@ BINARIES += omp5.bin
 BINARIES += omp6.bin
 BINARIES += omp7.bin
 BINARIES += omp8.bin
-BINARIES += omp9.bin
+BINARIES += histogram.bin
 BINARIES += omp10.bin
 BINARIES += hello.bin
 BINARIES += permute.bin
 BINARIES += linpack.bin
 BINARIES += calibrate.bin
+BINARIES += copyprivate.bin
 
 
 OPT += -march=armv7-m

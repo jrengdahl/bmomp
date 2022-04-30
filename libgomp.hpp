@@ -8,7 +8,7 @@
 
 #define GOMP_NUM_TEAMS 16
 
-#define GOMP_NUM_TASKS (GOMP_MAX_NUM_THREADS * 2)
+#define GOMP_NUM_TASKS 64
 
 extern void libgomp_init();
 

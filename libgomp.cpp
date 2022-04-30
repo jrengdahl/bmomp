@@ -83,6 +83,7 @@ struct team
     int sections = 0;
     int section = 0;
     int tasks = 0;
+    void *copyprivate = 0;
     };
 
 static team teams[GOMP_NUM_TEAMS];
@@ -184,6 +185,7 @@ void GOMP_parallel(
     teams[team].sections_count = 0;
     teams[team].sections = 0;
     teams[team].section= 0;
+    teams[team].copyprivate = 0;
 
     // start each member of the team
     for(unsigned i=0; i<num_threads; i++)
@@ -318,6 +320,30 @@ bool GOMP_single_start()
         }
     }
 
+
+
+extern "C"
+void *GOMP_single_copy_start()
+    {
+    int id = omp_get_thread_num();
+
+    if(omp_threads[id].single++ == teams[team].single)
+        {
+        teams[team].single++;
+        return 0;
+        }
+    else
+        {
+        return teams[team].copyprivate;
+        }
+    }
+
+
+extern "C"
+void GOMP_single_copy_end(void *data)
+    {
+    teams[team].copyprivate = data;
+    }
 
 
 

@@ -3,8 +3,8 @@ CROSS=arm-cortexm7-eabi-
 BINARIES += hello_c.bin
 BINARIES += hello_cpp.bin
 BINARIES += threadtest.bin
-BINARIES += omp1.bin
-BINARIES += omp2.bin
+BINARIES += parallelfor.bin
+BINARIES += barrier.bin
 BINARIES += omp3.bin
 BINARIES += omp4.bin
 BINARIES += omp5.bin
@@ -130,4 +130,4 @@ omp%.axf : omp%.o thread.o libgomp.o atoi.o stubs.o
 
 clean:
 	@echo [CLEAN}
-	@rm -f *.o *.su *.axf *.bin *.map
+	@rm -f *.o *.su *.axf *.bin *.map *.exe

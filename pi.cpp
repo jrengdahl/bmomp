@@ -32,7 +32,8 @@ int main()
 
             for(int i=0; i<res; i++)
                 {
-                sum += (f(i*dx) + f((i+1)*dx))/2.0 * dx;
+//                sum += (f(i*dx) + f((i+1)*dx))/2.0 * dx;
+                sum += f((i+0.5)*dx) * dx;
                 }
   
             double e = abs(sum - M_PI);

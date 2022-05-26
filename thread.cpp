@@ -15,11 +15,11 @@ static Thread thread_stack[THREAD_DEPTH];
 void Thread::resume()
     {
     __asm__ __volatile__(
-"   mov ip, sp                                      \n"         // sp cannot be pushed, so move it to ip first
-"   stmdb r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"         // push all the non-volatile registers of the current thread onto the thread stack
-"   ldmia r0,   {r4, r5, r6, r7, r8, r10, ip, lr}   \n"         // load all the non-volatile registers of the new thread into the registers
-"   mov sp, ip                                      \n"         // move ip back to sp
-    );                                                          // return to the new thread
+"   mov ip, sp                          \n"         // sp cannot be pushed, so move it to ip first
+"   stmdb r9!,  {r4-r8, r10-ip, lr}     \n"         // push all the non-volatile registers of the current thread onto the thread stack
+"   ldmia r0,   {r4-r8, r10-ip, lr}     \n"         // load all the non-volatile registers of the new thread into the registers
+"   mov sp, ip                          \n"         // move ip back to sp
+    );                                              // return to the new thread
     }
 
 // Suspend the current thread into a Thread object,
@@ -28,11 +28,11 @@ void Thread::resume()
 void Thread::suspend()
     {
     __asm__ __volatile__(
-"   mov ip, sp                                      \n"         // save sp in ip so it can be saved using STM
-"   stmia r0,   {r4, r5, r6, r7, r8, r10, ip, lr}   \n"         // save the non-volatile registers of the current thread into the Thread instance
-"   ldmia r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"         // pop the non-volatile registers of the most recently active thread on the pending stack
-"   mov sp, ip                                      \n"         // restore sp
-    );                                                          // return to the previously pending thread
+"   mov ip, sp                          \n"         // save sp in ip so it can be saved using STM
+"   stmia r0,   {r4-r8, r10-ip, lr}     \n"         // save the non-volatile registers of the current thread into the Thread instance
+"   ldmia r9!,  {r4-r8, r10-ip, lr}     \n"         // pop the non-volatile registers of the most recently active thread on the pending stack
+"   mov sp, ip                          \n"         // restore sp
+    );                                              // return to the previously pending thread
     }
 
 
@@ -58,24 +58,24 @@ void Thread::suspend()
 void Thread::start(THREADFN *fn, char *newsp)
     {
     __asm__ __volatile__(
-"   mov ip, sp                                      \n"             // save the sp of the calling thread in a register that can be pushed
-"   stmdb r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"             // push the calling thread onto the pending thread stack
+"   mov ip, sp                          \n"             // save the sp of the calling thread in a register that can be pushed
+"   stmdb r9!, {r4-r8, r10-ip, lr}      \n"             // push the calling thread onto the pending thread stack
 
-"   mov sp, %[newsp]                                \n"             // setup the new thread's stack
-"   mov r1, #0                                      \n"             //
-"   str r1, [sp, #0]                                \n"             // clear the return value
-"   str r1, [sp, #4]                                \n"             // and the "done" flag
+"   mov sp, %[newsp]                    \n"             // setup the new thread's stack
+"   mov r1, #0                          \n"             //
+"   str r1, [sp, #0]                    \n"             // clear the return value
+"   str r1, [sp, #4]                    \n"             // and the "done" flag
 
-"   blx %[fn]                                       \n"             // start executing the code of the new thread
+"   blx %[fn]                           \n"             // start executing the code of the new thread
 
 // when the new thread terminates, it returns here...
 
-"   mov r1, #1                                      \n"             //
-"   str r0, [sp, #0]                                \n"             // save the return value
-"   str r1, [sp, #4]                                \n"             // set the "done" flag
+"   mov r1, #1                          \n"             //
+"   str r0, [sp, #0]                    \n"             // save the return value
+"   str r1, [sp, #4]                    \n"             // set the "done" flag
 
-"   ldmia r11!, {r4, r5, r6, r7, r8, r10, ip, lr}   \n"             // pop the next thread from the pending thread stack, and return to it
-"   mov sp, ip                                      \n"
+"   ldmia r9!, {r4-r8, r10-ip, lr}      \n"             // pop the next thread from the pending thread stack, and return to it
+"   mov sp, ip                          \n"
 
     :
     : [fn]"r"(fn), [newsp]"r"(newsp)
@@ -89,7 +89,7 @@ void Thread::start(THREADFN *fn, char *newsp)
 void Thread::init()
     {
     __asm__ __volatile__(
-"   mov r11, %[tsp]"                                                // init the thread stack pointer
+"   mov r9, %[tsp]"                                     // init the thread stack pointer
     :
     : [tsp]"r"(&thread_stack[THREAD_DEPTH])
     :

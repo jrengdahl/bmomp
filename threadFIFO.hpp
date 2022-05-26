@@ -38,10 +38,10 @@ class threadFIFO : public FIFO<Thread, N>
 
         __asm__ __volatile__(
 
-    "   mov ip, sp                                      \n"
-    "   stmia %[th], {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
-    "   ldmia r11!,  {r4, r5, r6, r7, r8, r10, ip, lr}   \n"
-    "   mov sp, ip                                      \n"
+    "   mov ip, sp                          \n"
+    "   stmia %[th], {r4-r8, r10-ip, lr}    \n"
+    "   ldmia r9!,   {r4-r8, r10-ip, lr}    \n"
+    "   mov sp, ip                          \n"
         :
         : [th]"r"(&(this->Data)[curNextIn])
         :
@@ -65,10 +65,10 @@ class threadFIFO : public FIFO<Thread, N>
             }
 
         __asm__ __volatile__(
-    "   mov ip, sp                                      \n"
-    "   stmdb r11!,  {r4, r5, r6, r7, r8, r10, ip, lr}  \n"
-    "   ldmia %[th], {r4, r5, r6, r7, r8, r10, ip, lr}  \n"
-    "   mov sp, ip                                      \n"
+    "   mov ip, sp                          \n"
+    "   stmdb r9!,   {r4-r8, r10-ip, lr}    \n"
+    "   ldmia %[th], {r4-r8, r10-ip, lr}    \n"
+    "   mov sp, ip                          \n"
         :
         : [th]"r"(&(this->Data)[curNextOut])
         :

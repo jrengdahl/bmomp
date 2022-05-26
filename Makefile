@@ -5,7 +5,7 @@ BINARIES += hello_cpp.bin
 BINARIES += threadtest.bin
 BINARIES += parallelfor.bin
 BINARIES += barrier.bin
-BINARIES += omp3.bin
+BINARIES += critical.bin
 BINARIES += omp4.bin
 BINARIES += omp5.bin
 BINARIES += omp6.bin
@@ -22,7 +22,6 @@ BINARIES += copyprivate.bin
 
 OPT += -march=armv7-m
 OPT += -ffixed-r9
-OPT += -ffixed-r11
 OPT += -mabi=aapcs-linux
 OPT += -fopenmp
 OPT += -Os

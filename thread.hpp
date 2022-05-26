@@ -33,7 +33,7 @@
 // threads see the same content for all addresses, regardless of cacheing or which core they are on).
 //
 // This implementation stores the thread stack pointer (points to a stack of pending threads, not to be
-// confused with the notmal sp) in r11. This removes one more register from the pool allocatable by the
+// confused with the normal sp) in r9. This removes one more register from the pool allocatable by the
 // compiler, but has the following significant benefit:
 // -- the thread switching code becomes much faster and simpler.
 // -- the compiler requires fewer registers to implement a context switch, thus the threadFIFO algorithm
@@ -68,11 +68,11 @@ class Thread
     uint32_t r7;
     uint32_t r8;
     uint32_t r10;
+    uint32_t r11;
     uint32_t sp;
     uint32_t lr;
 
-    // r9 is reserved by u-boot for the gd pointer
-    // r11 is reserved by Thread for the thread stack pointer
+    // r9 is reserved by Thread for the thread stack pointer
 
     static void start(THREADFN *fn, char *sp);                  // an internal function to start a new thread
 
@@ -90,7 +90,7 @@ class Thread
         }
 
 
-    static void init();                     // powerup init of the thread system (inits the thread stack pointer in r11)
+    static void init();                     // powerup init of the thread system (inits the thread stack pointer in r9)
 
     // Thread::done -- test whether a thread is running
     // arg: the thread's stack
